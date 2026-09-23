@@ -303,6 +303,68 @@ def main() -> int:
                     f"re-verify its coordinate.",
                 )
 
+    # --- every map label must be renderable with the glyph ranges we ship -------
+    # The app bundles only the 0-255 .pbf range per font. A character outside it
+    # makes maplibre request a glyph range that does not exist (404) and the
+    # character fails to draw. In September 2026 the Sioux County label used an
+    # em dash and 404'd on every render.
+    style_path = REPO_ROOT / "src/data/map-style.json"
+    fonts_dir = PUBLIC / "fonts"
+    if style_path.exists() and fonts_dir.is_dir():
+        available = {}
+        for font_dir in fonts_dir.iterdir():
+            if font_dir.is_dir():
+                ranges = set()
+                for pbf in font_dir.glob("*.pbf"):
+                    start, _, end = pbf.stem.partition("-")
+                    if start.isdigit() and end.isdigit():
+                        ranges.add((int(start), int(end)))
+                available[font_dir.name] = ranges
+
+        style = json.loads(style_path.read_text())
+        for layer in style.get("layers", []):
+            layout = layer.get("layout") or {}
+            text_field = layout.get("text-field")
+            if not isinstance(text_field, str):
+                continue
+            fonts = layout.get("text-font") or []
+            for character in set(text_field):
+                if character in "{}\n" or ord(character) <= 255:
+                    continue
+                for font in fonts:
+                    covered = any(
+                        low <= ord(character) <= high
+                        for low, high in available.get(font, set())
+                    )
+                    check(
+                        covered,
+                        f"map-style.json layer {layer['id']!r} uses {character!r} "
+                        f"(U+{ord(character):04X}) in text-field, but {font!r} ships no glyph "
+                        f"range covering it. maplibre will 404 and the character will not "
+                        f"render. Use an ASCII character or ship the range.",
+                    )
+
+        # Label data feeds the same glyph pipeline via {name}.
+        for filename, font in (("places.geojson", "Noto Sans Regular"),
+                               ("counties.geojson", "Noto Sans Bold"),
+                               ("reservations.geojson", "Noto Sans Bold")):
+            path = PUBLIC / filename
+            if not path.exists():
+                continue
+            ranges = available.get(font, set())
+            for feature in json.loads(path.read_text()).get("features", []):
+                name = feature.get("properties", {}).get("name") or ""
+                for character in set(name):
+                    if ord(character) <= 255:
+                        continue
+                    if not any(low <= ord(character) <= high for low, high in ranges):
+                        warn(
+                            False,
+                            f"{filename}: {name!r} contains {character!r} "
+                            f"(U+{ord(character):04X}), which {font!r} cannot render with the "
+                            f"shipped glyph ranges; it will be blank on the map.",
+                        )
+
     print(f"911-addresses.parquet: {rows:,} rows, {meta.num_row_groups} row groups")
     print(f"polling places: {limit} rows; source-list.json: {len(source_list)} entries")
     for message in warnings:

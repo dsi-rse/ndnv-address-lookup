@@ -154,6 +154,29 @@ in the same town** is the reliable test.
 - `svelte-check` unchanged at the standing 195 errors. `vite build` clean, `dist` 18 MB.
 - Production confirmed to be serving the 2026-09-02 data (435,480 rows), i.e. PR #35 deployed.
 
+## Deployed-preview check
+
+The Vercel preview built from `d9f482a` was driven end to end with the Chrome DevTools MCP (the
+preview sits behind Deployment Protection, so it needs an authenticated browser session).
+
+Confirmed on the deployment itself: 167 polling rows, 64 drop boxes, 16 early-voting rows, and a
+byte-identical `911-addresses.parquet` (2,323,645 bytes); the dev-only `window.__map` handle
+correctly absent; Ransom / Rolette / Williams / Mountrail / Ward / Griggs all correct; Foster
+still without a drop box; Pembina and Adams unchanged; the previously-blank Fargo address showing
+all 16 official locations; the Sioux fallback opening from both a map tap and a search, with 12
+links and none broken; the mobile `<dialog>` path clean at 360x640; peak heap 39 MB.
+
+**One defect found and fixed:** across 250 resources the only network failure was
+`404 /fonts/Noto Sans Bold/8192-8447.pbf`, caused by an **em dash** in the
+`sioux-fallback-label` text added in September. The app ships only the 0-255 glyph range, so the
+label 404'd on every render and the hint could not draw. Reworded to ASCII ("No addresses here.
+Tap for Sioux County voting information") -- verified afterwards that the only font requests are
+the two 0-255 ranges, with no failures. **This fix is not in the preview that was checked; it
+needs a redeploy.**
+
+Investigating that 404 also surfaced the pre-existing **Twin Buttes** label problem and the
+**zoom-12 visibility** of the Sioux hint; both are written up in `known-gaps.md`.
+
 ## For the final (late-October) check
 
 - **Foster County drop box** is the one remaining gap.

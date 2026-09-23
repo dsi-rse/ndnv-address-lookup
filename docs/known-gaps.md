@@ -112,6 +112,44 @@ the official record.
 - `dropboxes.csv` has a garbled `state` column (one row reads `No`). The app never reads it.
 - Some drop-box hours fields are empty, rendering a blank line.
 
+## Map labels are limited to the 0-255 glyph range
+
+The app bundles only `0-255.pbf` per font (Noto Sans Bold / Regular / Italic). Any character
+above U+00FF makes maplibre request a glyph range that is not there, it 404s, and **maplibre
+drops the entire label** rather than rendering the characters it does have.
+
+**Twin Buttes is invisible on the map.** `places.geojson` names it
+`Twin Buttes / cuuk gaamaa[glottal]uush / Tiiru[apostrophe]pa Pshii Woonis` (real text uses
+U+0294 LATIN LETTER GLOTTAL STOP, needing range 512-767, and U+2019 RIGHT SINGLE QUOTATION MARK,
+needing 8192-8447). The accented vowels are inside 0-255 and fine; those two are not, so the
+label never draws -- verified on the deployed site at z12.2 centred on the community, while
+Mandaree and Spotted Horn render normally.
+
+This matters more than a typical label bug: Twin Buttes is a Fort Berthold community with its
+own polling place (Twin Buttes Community Center), and the missing text is its Mandan/Hidatsa
+name. It is **pre-existing** (introduced with `places.geojson` in 2025) and affects no voting
+information, so it did not block the September 2026 releases.
+
+Fixing it properly means shipping the two glyph ranges for Noto Sans Regular, which needs a
+fontnik-style SDF glyph build that is not set up in this repo. **Do not "fix" it by substituting
+ASCII lookalikes** -- the apostrophe in that name may be orthographically meaningful rather than
+decorative punctuation, and that is a decision for the community, not for us.
+
+`scripts/validate-data.py` now warns about any label character the shipped ranges cannot render,
+and **errors** for `text-field` literals in `map-style.json` (which are ours to control).
+
+## The Sioux County "tap here" hint only appears at zoom 12+
+
+`sioux-fallback-label` is declared with `minzoom: 7`, but `reservation-names` ("Standing Rock")
+wins the symbol-collision contest below zoom 12, so the hint does not actually draw until
+`reservation-names` stops at its `maxzoom` of 12. Measured with `queryRenderedFeatures`: 0
+rendered at z7/z9/z11, then 3/4/6 at z12/z13/z14.
+
+In practice both realistic paths still work -- searching "Sioux County" or "Standing Rock
+Reservation" opens the box directly, and a voter zooming in to look for address dots has to pass
+zoom 11 anyway -- so this was left alone rather than changing collision behaviour just before an
+election. Worth revisiting afterwards.
+
 ## Coordinates are lossily compressed
 
 `lon`/`lat` are float32 with low mantissa bits cleared: about **3 m of longitude and 5 m of
