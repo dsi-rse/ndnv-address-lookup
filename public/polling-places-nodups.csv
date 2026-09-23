@@ -74,7 +74,7 @@ Emerado Community Center,300 Main Street,Emerado,Grand Forks,58228,7:00AM-7:00PM
 Thompson Community Center,306 Pacific Ave,Thompson,Grand Forks,58278,7:00AM-7:00PM,(701) 780-8200 Ext.
 Elgin Community Center,305 Main Street North,Elgin,Grant,58533,7:00AM-7:00PM,(701) 622-3275 Ext.
 Grant County Courthouse,106 2nd AVE NE,Carson,Grant,58529,7:00AM-7:00PM,(701) 622-3275 Ext.
-Griggs County Courthouse,805 Odegard Ave SW,Cooperstown,Griggs,58425,7:00AM-7:00PM,(701) 797-3117 Ext.
+Griggs County Courthouse,805 Odegard Ave SW,Cooperstown,Griggs,58425,9:00AM-7:00PM,(701) 797-3117 Ext.
 Enchanted Castle,607 Main Ave S,Regent,Hettinger,58650,9:00AM-7:00PM,(701) 824-2515 Ext.
 Mott Armory,507 Brown Ave,Mott,Hettinger,58646,9:00AM-7:00PM,(701) 824-2515 Ext.
 New England Memorial Hall,925 Main Street,New England,Hettinger,58646,9:00AM-7:00PM,(701) 824-2515 Ext.
@@ -106,16 +106,18 @@ Almont Fire Hall,510 Dakota Ave,Almont,Morton,58520,7:00AM-7:00PM,(701) 667-3300
 Glen Ullin Municipal Building,119 Main St S,Glen Ullin,Morton,58631,7:00AM-7:00PM,(701) 667-3300 Ext.
 Hebron Community Center,600 Washington Ave,Hebron,Morton,58638,7:00AM-7:00PM,(701) 667-3300 Ext.
 Mountrail County South Complex,8103 61st St NW,Stanley,Mountrail,58784,8:00AM-7:00PM,(701) 628-2145 Ext.
-New Town Civic Center Auditorium,103 Soo Place,New Town,Mountrail,58763,8:00AM-7:00PM,(701) 628-2145 Ext.
+New Town The Venue,235 Main St,New Town,Mountrail,58763,8:00AM-7:00PM,(701) 628-2145 Ext.
 Palermo City Hall,249 Broadway St,Palermo,Mountrail,58769,8:00AM-7:00PM,(701) 628-2145 Ext.
 Parshall American Legion Building,16 Main St N,Parshall,Mountrail,58770,8:00AM-7:00PM,(701) 628-2145 Ext.
 Plaza R&B Complex,4161 64th Ave NW,Plaza,Mountrail,58771,8:00AM-7:00PM,(701) 628-2145 Ext.
-Ross Community Building,300 Main St,Ross,Mountrail,58776,8:00AM-7:00PM,(701) 628-2145 Ext.
+Ross Community Building,203 Main St,Ross,Mountrail,58776,8:00AM-7:00PM,(701) 628-2145 Ext.
 Nelson County Courthouse,210 B Ave W,Lakota,Nelson,58344,7:00AM-7:00PM,(701) 247-2463 Ext.
 Oliver County Courthouse,115 West Main,Center,Oliver,58530,8:00AM-7:00PM,(701) 794-8721 Ext.
 Pembina County Courthouse,301 Dakota St W,Cavalier,Pembina,58220,8:00AM-7:00PM,(701) 265-4231 Ext.
 Pierce County Courthouse,"240 2nd St SE, Suite 6",Rugby,Pierce,58368,7:00AM-7:00PM,(701) 776-5225 Ext. 2000
 Memorial Building,524 4th Ave NE,Devils Lake,Ramsey,58301,7:00AM-7:00PM,(701) 662-7025 Ext.
+City Auditors Office - Enderlin,"411 Railway St,",Enderlin,Ransom,58027,9:00AM-7:00PM,(701) 683-6113 Ext.
+EXPO,612 7th Ave W,Lisbon,Ransom,58054,9:00AM-7:00PM,(701) 683-6113 Ext.
 Renville County Courthouse,205 Main St E,Mohall,Renville,58761,8:00AM-7:00PM,(701) 756-6301 Ext.
 Abercrombie Community Hall,516 Broadway,Abercrombie,Richland,58001,7:00AM-7:00PM,(701) 642-7700 Ext.
 Colfax Community Center,209 Broadway St S,Colfax,Richland,58018,7:00AM-7:00PM,(701) 642-7700 Ext.
@@ -124,6 +126,11 @@ Hankinson Community Center,112 Main Ave S,Hankinson,Richland,58041,7:00AM-7:00PM
 Lidgerwood KC Hall,56 Wiley Ave S,Lidgerwood,Richland,58053,7:00AM-7:00PM,(701) 642-7700 Ext.
 Wahpeton Event Center,995 21st Ave N,Wahpeton,Richland,58041,7:00AM-7:00PM,(701) 642-7700 Ext.
 Wyndmere Fire Hall,306 Cedar Ave,Wyndmere,Richland,58081,7:00AM-7:00PM,(701) 642-7700 Ext.
+Derrick Dixon Event Center,1210 William Hardesty Street,Belcourt,Rolette,58316,8:00AM-7:00PM,(701) 477-5665 Ext. 102
+Dunseith City Hall,13 1st St E,Dunseith,Rolette,58329,8:00AM-7:00PM,(701) 477-5665 Ext. 102
+Rolla City Hall,14 1st St SE,Rolla,Rolette,58367,8:00AM-7:00PM,(701) 477-5665 Ext. 102
+St. John Senior Center,200 Foussard Ave SW,St. John,Rolette,58369,8:00AM-7:00PM,(701) 477-5665 Ext. 102
+WWI Memorial Building,503 2nd Ave,Rolette,Rolette,58366,8:00AM-7:00PM,(701) 477-5665 Ext. 102
 Forman City Hall,349 Main St S,Forman,Sargent,58032,8:00AM-7:00PM,(701) 724-6241 Ext. 101
 McClusky City Hall,117 B Ave East,McClusky,Sheridan,58463,8:00AM-7:00PM,(701) 363-2205 Ext.
 Sioux County Courthouse,303 2nd Ave,Fort Yates,Sioux,58538,7:00AM-7:00PM,(701) 854-3481 Ext.
@@ -152,9 +159,10 @@ Surrey City Hall,100 Pleasant Ave S,Surrey,Ward,58785,7:00AM-7:00PM CT,(701) 857
 Bowdon Fire Hall,220 Warrington Ave.,Bowdon,Wells,58418,7:00AM-7:00PM,(701) 547-3521 Ext.
 Festival Hall (Wells County Fairgrounds),604 Hwy 15,Fessenden,Wells,58438,7:00AM-7:00PM,(701) 547-3521 Ext.
 Harvey City Hall,120 West 8th Street,Harvey,Wells,58341,7:00AM-7:00PM,(701) 547-3521 Ext.
-Williston ARC,822 18th St E,Williston,Williams,58801,7:00AM-7:00PM,(701) 577-4500 Ext.
-Derrick Dixon Event Center,1210 William Hardesty Street,Belcourt,Rolette,58316,8:00AM-7:00PM,(701) 477-5665 Ext. 101
-Dunseith City Hall,13 1st St E,Dunseith,Rolette,58329,8:00AM-7:00PM,(701) 477-5665 Ext. 101
-Rolla City Hall,14 1st St SE,Rolla,Rolette,58367,8:00AM-7:00PM,(701) 477-5665 Ext. 101
-St John Senior Center,200 Foussard Ave SW,St John,Rolette,58369,8:00AM-7:00PM,(701) 477-5665 Ext. 101
-WWI Memorial Building,503 2nd Ave,Rolette,Rolette,58366,8:00AM-7:00PM,(701) 477-5665 Ext. 101
+Williams County Fairgrounds,519 53rd St E Building B,Williston,Williams,58801,8:00AM-7:00PM,(701) 577-4500 Ext.
+Williston ARC,822 18th St E,Williston,Williams,58801,8:00AM-7:00PM,(701) 577-4500 Ext.
+Ernie French Center,14120 Hwy 2,Williston,Williams,58801,8:00AM-7:00PM,(701) 577-4500 Ext.
+Grenora City Hall,204 Main St,Grenora,Williams,58845,8:00AM-7:00PM,(701) 577-4500 Ext.
+Ray City Hall,101 Main St,Ray,Williams,58849,8:00AM-7:00PM,(701) 577-4500 Ext.
+Tioga Community Center,510 NE 6th St,Tioga,Williams,58852,8:00AM-7:00PM,(701) 577-4500 Ext.
+Wildrose Fire Hall,412 Main St,Wildrose,Williams,58795,8:00AM-7:00PM,(701) 577-4500 Ext.

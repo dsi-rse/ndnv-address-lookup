@@ -9,7 +9,8 @@ data is held to one rule: **every claim the app makes must be traceable to an of
 | [`recheck-runbook.md`](recheck-runbook.md) | **Start here when refreshing the data.** Step-by-step procedure, written for someone with no prior context. |
 | [`data-sources.md`](data-sources.md) | Where every shipped dataset comes from, and how it is processed. |
 | [`known-gaps.md`](known-gaps.md) | What the app cannot tell you, and why. Read before promising anyone completeness. |
-| [`2026-09-02-data-recheck.md`](2026-09-02-data-recheck.md) | Audit record of the September 2026 refresh: every discrepancy found and every decision taken. |
+| [`2026-09-23-data-recheck.md`](2026-09-23-data-recheck.md) | Audit record of the second refresh, the day before absentee voting opened. Includes three process fixes. |
+| [`2026-09-02-data-recheck.md`](2026-09-02-data-recheck.md) | Audit record of the first refresh: every discrepancy found and every decision taken. |
 
 ## The pipeline
 
@@ -26,7 +27,7 @@ polling-place refresh; steps 0 and 5 are for a full address rebuild.
 | `scripts/rekey-wheretovote-scrape.py` | Re-point an existing WhereToVote scrape at a rebuilt address file. |
 | `scripts/step2-analyze-wheretovote.py` | Join addresses to polling places and build the inferred polling areas. |
 | `scripts/step3-add-wheretovote-to-addresses.py` | Add `county_fp`, `district`, `in_wheretovote`, `polling_places` to the address Parquet. |
-| `scripts/validate-data.py` | Check every invariant the app depends on. **Run after any data change.** |
+| `scripts/validate-data.py` | Check every invariant the app depends on, including that no official answer is dropped, that no free text cites a previous election's dates, and that no location kept its name while changing address. **Run after any data change.** |
 
 Large inputs and intermediates live in
 `~/Box/dsi-core/11th-hour/ndnv-address-lookup/`, not in git.

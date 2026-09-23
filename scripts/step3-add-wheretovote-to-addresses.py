@@ -299,7 +299,20 @@ def assign_wheretovote_fields(
             f"{points_polling_places.loc[bad_index]!r} vs {areas.loc[bad_index]!r}"
         )
 
+    # Fill from the inferred polygons first, then let the addresses WhereToVote
+    # answered directly override.
+    #
+    # Filling from `areas` alone silently discarded 533 official answers: an address
+    # that WhereToVote DOES have an answer for still ended up blank whenever it fell
+    # outside every polygon, which happens because
+    # remove_small_polling_area_components() deliberately drops simply-connected
+    # components with fewer than --min-addresses points. Dropping a shaky *inference*
+    # is right; dropping the state's own answer for that address is not.
+    #
+    # The disagreement check above has already proven the two sources agree wherever
+    # they overlap, so this is purely additive.
     dataframe.loc[area_mask, "polling_places"] = areas.loc[area_mask]
+    dataframe.loc[points_polling_places.index, "polling_places"] = points_polling_places
     return dataframe
 
 

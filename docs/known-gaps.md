@@ -2,7 +2,7 @@
 
 What this app cannot tell you, and why. Read before describing its coverage to anyone.
 
-Last reviewed 2026-09-02.
+Last reviewed 2026-09-23.
 
 ## Sioux County / Standing Rock has no state 911 data at all
 
@@ -26,17 +26,21 @@ turn the fallback into a real address lookup.
 
 Re-check each of these on every refresh; they are expected to fill in before the election.
 
-| Gap | Status 2026-09-02 |
+| Gap | Status 2026-09-23 |
 |---|---|
-| **Ransom County polling places** | WhereToVote says "not established at this time by the county". ~2,591 addresses show no polling place. Declared in `scripts/precincts-supplement.json`. |
-| **Ransom County drop box** | Absent from `eid=348`. |
-| **Foster and Griggs drop boxes** | Dropped after the primary with no general-election replacement. |
-| **Ward County early voting** | Absent from `eid=348`, though its primary-era comment described general-election hours. |
-| **Rolette County** | Published in WhereToVote but missing from the Precincts export; carried by the supplement. Delete the entry once the export is fixed. |
+| **Foster County drop box** | **Still missing.** The only remaining county gap. |
+| Ransom County polling places | **Closed** — established; all 2,790 addresses now have a polling place. |
+| Ransom County drop box | **Closed** — Ransom County Courthouse. |
+| Griggs County drop box | **Closed.** |
+| Ward County early voting | **Closed** — Ward County Administration Building. |
+| Rolette County | **Closed** — now in the Precincts export; supplement retired. Its drop box changed to Rolette City Hall in the process. |
 
-## Polling places are inferred for 13.5% of addresses
+`scripts/precincts-supplement.json` is currently **empty**, which means `step2` will now abort
+loudly on any precinct it cannot match — the guard is live rather than suppressed.
 
-Only **86.5%** of addresses (376,852 of 435,480) have a polling place taken directly from
+## Polling places are inferred for 13.0% of addresses
+
+Only **87.0%** of addresses (379,761 of 436,314) have a polling place taken directly from
 WhereToVote. The rest are inferred from location and the app labels them
 **"Polling Places (inferred from location)"** rather than implying official provenance.
 
@@ -49,7 +53,9 @@ Two reasons an address is inferred:
 Inference method: within each county ∩ legislative district, Voronoi areas are built around the
 addresses that *were* found, and unfound addresses inherit the polling places of the area they
 fall in. Simply-connected areas containing fewer than 10 attested addresses are **dropped**
-rather than trusted, so some addresses get no polling place at all (3,681, most of them Ransom's).
+rather than trusted, so some addresses get no polling place at all — **395** as of 2026-09-23,
+down from 3,681, after Ransom was resolved and after a step3 bug was fixed that had been
+discarding 533 addresses' official answers along with the dropped polygons.
 
 ## Two hand-imputed precincts
 
@@ -105,6 +111,44 @@ the official record.
 - One `zip` is the malformed 4-digit `5885`; 16 addresses have no ZIP.
 - `dropboxes.csv` has a garbled `state` column (one row reads `No`). The app never reads it.
 - Some drop-box hours fields are empty, rendering a blank line.
+
+## Map labels are limited to the 0-255 glyph range
+
+The app bundles only `0-255.pbf` per font (Noto Sans Bold / Regular / Italic). Any character
+above U+00FF makes maplibre request a glyph range that is not there, it 404s, and **maplibre
+drops the entire label** rather than rendering the characters it does have.
+
+**Twin Buttes is invisible on the map.** `places.geojson` names it
+`Twin Buttes / cuuk gaamaa[glottal]uush / Tiiru[apostrophe]pa Pshii Woonis` (real text uses
+U+0294 LATIN LETTER GLOTTAL STOP, needing range 512-767, and U+2019 RIGHT SINGLE QUOTATION MARK,
+needing 8192-8447). The accented vowels are inside 0-255 and fine; those two are not, so the
+label never draws -- verified on the deployed site at z12.2 centred on the community, while
+Mandaree and Spotted Horn render normally.
+
+This matters more than a typical label bug: Twin Buttes is a Fort Berthold community with its
+own polling place (Twin Buttes Community Center), and the missing text is its Mandan/Hidatsa
+name. It is **pre-existing** (introduced with `places.geojson` in 2025) and affects no voting
+information, so it did not block the September 2026 releases.
+
+Fixing it properly means shipping the two glyph ranges for Noto Sans Regular, which needs a
+fontnik-style SDF glyph build that is not set up in this repo. **Do not "fix" it by substituting
+ASCII lookalikes** -- the apostrophe in that name may be orthographically meaningful rather than
+decorative punctuation, and that is a decision for the community, not for us.
+
+`scripts/validate-data.py` now warns about any label character the shipped ranges cannot render,
+and **errors** for `text-field` literals in `map-style.json` (which are ours to control).
+
+## The Sioux County "tap here" hint only appears at zoom 12+
+
+`sioux-fallback-label` is declared with `minzoom: 7`, but `reservation-names` ("Standing Rock")
+wins the symbol-collision contest below zoom 12, so the hint does not actually draw until
+`reservation-names` stops at its `maxzoom` of 12. Measured with `queryRenderedFeatures`: 0
+rendered at z7/z9/z11, then 3/4/6 at z12/z13/z14.
+
+In practice both realistic paths still work -- searching "Sioux County" or "Standing Rock
+Reservation" opens the box directly, and a voter zooming in to look for address dots has to pass
+zoom 11 anyway -- so this was left alone rather than changing collision behaviour just before an
+election. Worth revisiting afterwards.
 
 ## Coordinates are lossily compressed
 

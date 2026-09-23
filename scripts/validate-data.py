@@ -8,7 +8,10 @@ worth a human look are warnings.
 
 import argparse
 import csv
+import datetime
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -28,8 +31,37 @@ EXPECTED_TYPES = [
     "float", "string", "bool", "string", "uint8",
 ]
 
+# The election this data is for. Free text mentioning a date outside the window
+# between absentee opening and election day is almost always left over from the
+# previous election -- in September 2026 a Cavalier County drop-box row still told
+# voters their ballot was due "June 9th, 2026", and shipped that way for 3 weeks.
+ELECTION_DAY = datetime.date(2026, 11, 3)
+ABSENTEE_OPENS = datetime.date(2026, 9, 24)
+
+MONTHS = {m.lower(): i for i, m in enumerate(
+    ["January","February","March","April","May","June","July","August",
+     "September","October","November","December"], start=1)}
+DATE_RE = re.compile(
+    r"\b(January|February|March|April|May|June|July|August|September|October|"
+    r"November|December)\s+(\d{1,2})(?:st|nd|rd|th)?\b(?:[,\s]+(\d{4}))?",
+    re.I)
+
 errors: list[str] = []
 warnings: list[str] = []
+
+
+def stale_dates(text: str) -> list[str]:
+    """Month-day references that fall outside the current election window."""
+    out = []
+    for month_name, day, year in DATE_RE.findall(text or ""):
+        month = MONTHS[month_name.lower()]
+        try:
+            found = datetime.date(int(year) if year else ELECTION_DAY.year, month, int(day))
+        except ValueError:
+            continue
+        if not (ABSENTEE_OPENS <= found <= ELECTION_DAY):
+            out.append(f"{month_name} {day}" + (f", {year}" if year else ""))
+    return out
 
 
 def check(condition: bool, message: str) -> None:
@@ -207,6 +239,131 @@ def main() -> int:
                 f"{json_name}: {name!r} coordinate {coordinate} is outside North Dakota "
                 f"(expected [lon, lat])",
             )
+
+    # --- an official answer must never be dropped ------------------------------
+    in_wheretovote = table.column("in_wheretovote").to_pylist()
+    polling_column = table.column("polling_places").to_pylist()
+    official_blank = sum(
+        1 for flag, value in zip(in_wheretovote, polling_column) if flag and value == ""
+    )
+    check(
+        official_blank == 0,
+        f"{official_blank} address(es) have in_wheretovote=True but no polling place. "
+        f"WhereToVote gave a definitive answer for them and the app would show nothing. "
+        f"Cause to look for: step3 filling polling_places only from the inferred "
+        f"polygons, which drops small components on purpose.",
+    )
+
+    # --- free text must not cite the previous election --------------------------
+    for filename, name_column, text_columns in (
+        ("dropboxes.csv", "polling_location", ("polling_hours",)),
+        ("early-voting.csv", "early_voting_location", ("early_voting_times", "comments")),
+        ("polling-places-nodups.csv", "polling_location", ("polling_hours",)),
+    ):
+        path = PUBLIC / filename
+        if not path.exists():
+            continue
+        for record in read_csv(path):
+            for column in text_columns:
+                for found in stale_dates(record.get(column, "")):
+                    errors.append(
+                        f"{filename}: {record.get('county','?')} / "
+                        f"{record[name_column]!r} ({column}) mentions {found!r}, which is "
+                        f"outside {ABSENTEE_OPENS}..{ELECTION_DAY}. Left over from a "
+                        f"previous election?"
+                    )
+
+    # --- a renamed address must not keep a stale coordinate ---------------------
+    # The geocoder is incremental BY NAME, so a location that moved but kept its
+    # name silently keeps its old coordinate. Compare against the committed copy.
+    for filename, name_column in (
+        ("polling-places-nodups.csv", "polling_location"),
+        ("dropboxes.csv", "polling_location"),
+        ("early-voting.csv", "early_voting_location"),
+    ):
+        try:
+            committed = subprocess.run(
+                ["git", "show", f"HEAD:public/{filename}"],
+                cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+            ).stdout
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+        before = {
+            r[name_column]: (r["address"], r["city"])
+            for r in csv.DictReader(committed.splitlines())
+        }
+        for record in read_csv(PUBLIC / filename):
+            was = before.get(record[name_column])
+            now = (record["address"], record["city"])
+            if was is not None and was != now:
+                warn(
+                    False,
+                    f"{filename}: {record[name_column]!r} kept its name but its address "
+                    f"changed {was} -> {now}. The geocoder skips names it already has, so "
+                    f"re-verify its coordinate.",
+                )
+
+    # --- every map label must be renderable with the glyph ranges we ship -------
+    # The app bundles only the 0-255 .pbf range per font. A character outside it
+    # makes maplibre request a glyph range that does not exist (404) and the
+    # character fails to draw. In September 2026 the Sioux County label used an
+    # em dash and 404'd on every render.
+    style_path = REPO_ROOT / "src/data/map-style.json"
+    fonts_dir = PUBLIC / "fonts"
+    if style_path.exists() and fonts_dir.is_dir():
+        available = {}
+        for font_dir in fonts_dir.iterdir():
+            if font_dir.is_dir():
+                ranges = set()
+                for pbf in font_dir.glob("*.pbf"):
+                    start, _, end = pbf.stem.partition("-")
+                    if start.isdigit() and end.isdigit():
+                        ranges.add((int(start), int(end)))
+                available[font_dir.name] = ranges
+
+        style = json.loads(style_path.read_text())
+        for layer in style.get("layers", []):
+            layout = layer.get("layout") or {}
+            text_field = layout.get("text-field")
+            if not isinstance(text_field, str):
+                continue
+            fonts = layout.get("text-font") or []
+            for character in set(text_field):
+                if character in "{}\n" or ord(character) <= 255:
+                    continue
+                for font in fonts:
+                    covered = any(
+                        low <= ord(character) <= high
+                        for low, high in available.get(font, set())
+                    )
+                    check(
+                        covered,
+                        f"map-style.json layer {layer['id']!r} uses {character!r} "
+                        f"(U+{ord(character):04X}) in text-field, but {font!r} ships no glyph "
+                        f"range covering it. maplibre will 404 and the character will not "
+                        f"render. Use an ASCII character or ship the range.",
+                    )
+
+        # Label data feeds the same glyph pipeline via {name}.
+        for filename, font in (("places.geojson", "Noto Sans Regular"),
+                               ("counties.geojson", "Noto Sans Bold"),
+                               ("reservations.geojson", "Noto Sans Bold")):
+            path = PUBLIC / filename
+            if not path.exists():
+                continue
+            ranges = available.get(font, set())
+            for feature in json.loads(path.read_text()).get("features", []):
+                name = feature.get("properties", {}).get("name") or ""
+                for character in set(name):
+                    if ord(character) <= 255:
+                        continue
+                    if not any(low <= ord(character) <= high for low, high in ranges):
+                        warn(
+                            False,
+                            f"{filename}: {name!r} contains {character!r} "
+                            f"(U+{ord(character):04X}), which {font!r} cannot render with the "
+                            f"shipped glyph ranges; it will be blank on the map.",
+                        )
 
     print(f"911-addresses.parquet: {rows:,} rows, {meta.num_row_groups} row groups")
     print(f"polling places: {limit} rows; source-list.json: {len(source_list)} entries")
