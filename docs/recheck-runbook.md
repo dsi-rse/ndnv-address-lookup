@@ -11,10 +11,14 @@ election. For November 3, 2026 that deadline was **August 31, 2026**, so county 
 frozen — but the Secretary of State's *data entry* lags behind them. As of 2026-09-02 three
 counties were still incomplete.
 
-Remaining checkpoints before the 2026 general election:
+Checkpoints for the 2026 general election:
 
-- [ ] **Before September 24, 2026** — absentee voting opens.
+- [x] **2026-09-02** — first pass (PR #35). See `2026-09-02-data-recheck.md`.
+- [x] **2026-09-23** — before absentee voting opened. See `2026-09-23-data-recheck.md`.
 - [ ] **Late October 2026** — final check.
+
+Each pass so far has found something the previous one missed, so run every step even when the
+cheap probes look quiet.
 
 ## Step 0 — Re-derive the election id. Never assume it.
 
@@ -88,26 +92,22 @@ distinction is the whole basis for how gaps are handled.**
 
 ## Step 3 — Re-check the known gaps
 
-Every one of these needs re-verifying each run. See `known-gaps.md` for detail.
+See `known-gaps.md`. As of 2026-09-23 the Secretary of State has closed all of these except
+Foster, and `scripts/precincts-supplement.json` is **empty**.
 
-- [ ] **Ransom County** — had *no* polling place for the general election on 2026-09-02, confirmed
-      at `WhereToVoteDetail.aspx?Part=37240103`. Listed in
-      `scripts/precincts-supplement.json` under `counties_without_polling_places`, which makes
-      step 2 drop those addresses instead of aborting. **When WhereToVote publishes Ransom's
-      locations, delete that entry** so ~2,600 addresses get their polling places back.
-- [ ] **Rolette County (Turtle Mountain)** — present in WhereToVote but *missing from the
-      Precincts export*. Carried by the `counties` section of
-      `scripts/precincts-supplement.json`. Re-verify the five vote centers at
-      `Part=40090101` … `40090501` and delete the entry if the export is fixed.
-- [ ] **Foster and Griggs drop boxes** — dropped for the general election with no replacement.
-- [ ] **Ward County early voting** — absent from `eid=348` although its `eid=346` comment
-      described general-election hours.
-- [ ] **Porcupine Local District Buidling** (Sioux County, SoS spelling) — located to street
-      level only; no geocoder resolves house number 3457 on Paha Yamni Loop. Do **not** "fix" it
-      from a name search or from MapQuest: Google's name search returns a building in Porcupine,
-      **South Dakota**, and MapQuest's entry lands in **Selfridge**, 24 km away, because ZIP
-      58568's postal locality is Selfridge. See `known-gaps.md`. A building-level coordinate
-      needs the Sioux County auditor, (701) 854-3481.
+- [ ] **Foster County drop box** — still absent. The only remaining county gap.
+- [ ] **Sioux County** — still zero address points statewide; the fallback box is still needed.
+- [ ] **Porcupine Local District Buidling** — street-level coordinate only. Do **not** "fix" it
+      from a name search or MapQuest (South Dakota / Selfridge respectively); see
+      `known-gaps.md`.
+
+**If the supplement is non-empty, diff before retiring an entry.** When `step1` prints
+`SKIP supplement: <county> is now in the SOS export`, compare the export's rows against what the
+supplement carried before deleting it — they are not necessarily the same. In September 2026 the
+supplement carried Rolette's drop box as *Rolette County Courthouse, 102 2nd St NE*; by the time
+the export caught up the county had changed it to *Rolette City Hall, 302 Main St*. Deleting the
+entry without looking would have been right by luck; carrying it forward would have shipped a
+stale location.
 
 ## Step 4 — Geocode any new locations
 
@@ -131,8 +131,17 @@ coordinate **only if Google echoes back the same street address**; otherwise loo
 imagery. If you cannot establish a coordinate you believe, **leave it out** — the app renders the
 address as plain text, which is honest, rather than linking to a guess.
 
-A useful cross-check: `validate-data.py` flags any coordinate outside North Dakota, and any
-location name that maps to two different addresses (coordinates are keyed by name alone).
+Two cross-checks worth knowing:
+
+- `validate-data.py` flags coordinates outside North Dakota, names mapping to two addresses, and
+  **names whose address changed while the name stayed the same**. That last one matters because
+  the geocoder is incremental *by name*: in September 2026 Ross Community Building moved from
+  300 to 203 Main St and silently kept its old coordinate. When you see that warning, delete the
+  name from the `*-locations.json` file and re-run the geocoder so it re-resolves.
+- A "distance from the town centre" sanity check via Nominatim produces false alarms — it put
+  Rolette City Hall "8.9 km from Rolette" because Nominatim's Rolette node is not the townsite.
+  Cross-check against a **hand-verified location in the same town** instead; Rolette City Hall is
+  72 m from the verified WWI Memorial Building.
 
 ## Step 5 — Only if the address count changed
 
@@ -247,14 +256,27 @@ Build the expectation table *before* running, then cross-check each against
 
 ### 7b. Unchanged data — the regression check
 
-Most of the state does not change, and a broken index would corrupt it silently. Pick ~10
-addresses in counties with no expected changes and diff the **whole** rendered popup against the
-same addresses on the deployed site, which still serves the old data.
+**Do the complete regression, not spot checks.** Compare the resolved polling-place *set* for
+every address present in both the committed and rebuilt files, and group the differences by
+county:
 
-**Do this before deploying** — once you push, the reference is gone.
+```python
+# for each address key (num, street, zip, muni) present in both, resolve
+# polling_places indexes -> location names and compare the sets; tally by county
+```
 
-On 2026-09-02 this caught a real change the export-to-export diff had missed: Mountrail County
-went from 8 polling places to 6, because `eid=346` itself had drifted since April.
+Then check every county that changed against a list of counties you *expect* to have changed.
+This is strictly better than the earlier advice to diff a handful of popups against the deployed
+site: it is exhaustive, it works offline, and it still works after you deploy (the committed
+files are the previous shipped state — `git show HEAD:public/...`).
+
+It earns its keep. On 2026-09-02 spot checks caught Mountrail dropping from 8 polling places to
+6. On 2026-09-23 the complete version flagged Burleigh (31 addresses) and Barnes (3) as
+unexpected, which turned out to be a **shipped bug in step3** that was discarding 533 official
+WhereToVote answers. Spot checks would not have found it.
+
+Also compare the popup text for two or three unchanged counties against the deployed site while
+it still serves the old data, as a sanity check on the rendering path.
 
 ### 7c. Also check
 

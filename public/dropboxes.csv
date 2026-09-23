@@ -1,5 +1,4 @@
 county,county_fp,polling_location,address,city,state,zip_code,polling_hours,county_auditor_phone
-Adams,1,Adams County Courthouse,602 Adams Ave Ste 201,Hettinger,ND,58639,,(701) 567-4363 Ext.
 Adams,1,Adams County Courthouse (Drop Box),602 Adams Ave.,Hettinger,No,58639,"Available 24 hours per day. All ballots must returned in this box by 7:00 p.m. November 3rd, 2026",(701) 567-4363 Ext.
 Barnes,3,Barnes County Courthouse (Dropbox),230 4th St NW,Valley City,ND,58072,"Secure ballot drop box located on north side of Courthouse entry available 24/7. All ballots must be returned by 7:00 pm on Tuesday, November 3, 2026",(701) 845-8500 Ext. 6666
 Benson,5,Benson County Courthouse (Dropbox),311 B Ave S,Minnewaukan,ND,58351,"Available 24 hrs per day - ballots must be returned by 7:00 p.m. on November 3, 2026",(701) 473-5340 Ext.
@@ -11,17 +10,18 @@ Bottineau,9,Bottineau Auditor's Office (Drop Box),314 W 5th Street,Bottineau,ND,
 Bowman,11,Bowman County Courthouse,104 1st Street NW,Bowman,ND,58623,"Drop Box Located inside Door B, Hours are M-Th 7:30 AM - 4:30 PM, Fridays 7:30 AM - 12:00 PM. Absentee ballots must be returned by 7:00 PM on November 3, 2026.",(701) 523-3130 Ext.
 Burke,13,Burke County Courthouse,103 Main Street SE,Bowbells,ND,58721,"Available 24 hours a day; ballots must be returned to drop box by 7pm Tuesday November 3, 2026",(701) 377-2861 Ext.
 Burleigh,15,City/County Building (Dropbox),221 N 5th St,Bismarck,ND,58501,"Ballots must be placed in the secure dropbox by 7:00pm on Tuesday, November 3rd, 2026.",(701) 222-6718 Ext.
-Cass,17,Cass County Courthouse (Drop Box),211 9th St S,Fargo,ND,58103,Final ballot pickup will be at 7pm on election day,(701) 241-5600 Ext.
-Cavalier,19,Cavalier County Courthouse (Drop Box),901 3RD ST,LANGDON,ND,58249,"Drop Box available 24 hours outside Door 1.  Absentee Ballots must be returned by Tuesday, June 9th, 2026 at 7:00 PM",(701) 256-2229 Ext.
+Cass,17,Cass County Courthouse (Drop Box),211 9th St S,Fargo,ND,58103,"Ballots must be placed in the dropbox by 7:00pm on Tuesday, November 3rd, 2026.",(701) 241-5600 Ext.
+Cavalier,19,Cavalier County Courthouse (Drop Box),901 3RD ST,LANGDON,ND,58249,"Drop Box available 24 hours outside Door 1.  Absentee Ballots must be returned by Tuesday, November 3rd, 2026 at 7:00 PM",(701) 256-2229 Ext.
 Dickey,21,Dickey County Courthouse (Drop Box),309 N 2nd Street,Ellendale,ND,58436,"Drop box is at the north entrance of the Courthouse. Open Monday - Friday 8:00am - 4:30pm. Open 8:00am - 7:00pm on Tuesday, November 3rd. All ballots must be returned by 7:00 pm on Tuesday, November 3rd.",(701) 349-8303 Ext.
 Dickey,21,Oakes Community Center (Drop Box),124 5th St. S,Oakes,ND,58474,"Drop box is at the City office. Open Monday - Friday 8:00am - 4:30pm. Open 8:00am - 7:00pm on Tuesday, November.3rd ballots must be returned by 7:00 pm on Tuesday, November 3rd.",(701) 349-8303 Ext.
 Divide,23,Divide County Auditor Office,200 N Main ST,Crosby,ND,58730,"Enter through west door. Dropbox is available 24/7. Ballots must be returned by 7:00 pm on November 3, 2026",(701) 965-6351 Ext.
-Dunn,25,Drop Box,205 Owens Street,Manning,ND,58642,Located in the entry way of the courthouse,(701) 573-4448 Ext.
+Dunn,25,Drop Box,205 Owens Street,Manning,ND,58642,"Available 24/7 until 7:00pm MST on November 3, 2026 - Located in the entry way of the courthouse",(701) 573-4448 Ext.
 Eddy,27,Eddy County Courthouse (Drop Box),524 Central Avenue,New Rockford,ND,58356,"In alley of Courthouse by back door. Available 24 hours. Ballot must be placed in drop box by 7:00 PM on Tuesday, November 3, 2026.",(701) 947-2434 Ext. 2020
 Emmons,29,Emmons County (Dropbox),100 4th St. NW,Linton,ND,58552,"Available 24 hours a day; ballots must be returned by 7:00 pm on November 3, 2026.",(701) 254-4807 Ext.
 Golden Valley,33,Golden Valley County Courthouse (Drop Box),150 1st Ave SE,Beach,ND,58621,"Ballot drop box is located outside of the South entrance of the Courthouse.  Open 24 hours.  Ballots are due by 7 pm on Election Day Tuesday, November 3, 2026",(701) 872-4331 Ext.
 Grand Forks,35,GF County Office Bldg Parking Ramp (Drop Box),151 South 4th Street,Grand Forks,ND,58201,"East side of County Office Bldg in the parking ramp.  Ballots must be returned to the drop box by 7:00 pm Tuesday, November 3rd.",(701) 780-8200 Ext.
 Grant,37,Grant County Courthouse (Drop Box),106 2nd Ave NE,Carson,ND,58529,"Drop Box is available 24 hours a day. Ballots must be returned by 7:00 p.m. MT November 3, 2026.",(701) 622-3275 Ext.
+Griggs,39,Griggs County Courthouse (Drop Box),805 Odegard Ave SW,Cooperstown,No,58425,"Drop box will be available M-F 8:00am - 4:30pm.  Absentee ballots must be returned  by 7:00 pm on November 3, 2026",(701) 797-3117 Ext.
 Hettinger,41,Hettinger County Court House (Drop Box),336 Pacific Avenue,Mott,ND,58646,"By the Handicap access at the North Door - Open 24 hours a day until 7:00 p.m. MT on Tuesday, November 3, 2026",(701) 824-2515 Ext.
 Hettinger,41,New England City Hall (Drop Box),9 7th St E,New England,ND,58647,"Open 24 hours a day until 7:00 p.m. MT on Tuesday, November 3, 2026",(701) 824-2515 Ext.
 Hettinger,41,Regent City Hall (Drop Box),203 Main Avenue,Regent,ND,58650,"Open 24 hours a day until 7:00 p.m. MT on Tuesday, November 3, 2026",(701) 824-2515 Ext.
@@ -38,8 +38,11 @@ Nelson,63,Nelson County Courthouse,210 B Ave W,Lakota,ND,58344,"The drop box is 
 Oliver,65,Oliver County Courthouse (Drop Box),115 West Main,Center,ND,58530,"Drop Box Available 24 hours a day. Ballots must be placed in the dropbox by 7:00 pm on Tuesday, November 3, 2026.",(701) 794-8721 Ext.
 Pembina,67,Pembina County Courthouse (Dropbox),301 Dakota St W,Cavalier,ND,58220,"Dropbox is located in the rear parking lot of the Courthouse. Ballots must be returned to the drop box no later than 7:00 PM November 3, 2026",(701) 265-4231 Ext.
 Pierce,69,Pierce County Courthouse (Drop box),240 2nd St SE,Rugby,ND,58368,"Available 24 hours a day. All ballots delivered to drop box by 7pm on November 3, 2026",(701) 776-5225 Ext. 2000
+Ramsey,71,Ramsey County Courthouse (Drop Box),524 4th Ave NE,Devils Lake,ND,58301,Inside the Auditor's Office - drop off times 8 am to 12 noon & 1pm to 5pm,(701) 662-7025 Ext.
+Ransom,73,Ransom County Courthouse (Drop Box),204 5th Ave W,Lisbon,ND,58054,"Ballots must be placed in the secure drop box by 7pm on Tuesday, November 3, 2026",(701) 683-6113 Ext.
 Renville,75,Renville County Courthouse (Drop Box),205 Main St E,Mohall,ND,58761,"Available 24/7.  Must be dropped off by Tuesday, November 3rd at 7pm.",(701) 756-6301 Ext.
 Richland,77,Richland County Courthouse (Drop Box),418 2nd Ave N,Wahpeton,ND,58075,Northwest corner of Courthouse - Open 24 hours a day starting 09-24-2026 until 8 am on 11-03-2026,(701) 642-7700 Ext.
+Rolette,79,Rolette City Hall (Drop Box),302 Main St,Rolette,ND,58366,Utility Dropbox,(701) 477-5665 Ext. 102
 Sargent,81,Sargent County Courthouse (Drop Box),"355 Main St S, Suite 1",Forman,ND,58032,"Drop Box at SW elevator entrance or the Auditor's Office - ballots to be dropped off no later than close of polls on Election Day - 7:00 p.m. November 3, 2026.",(701) 724-6241 Ext. 101
 Sioux,85,Porcupine Local District Buidling,3457 Paha Yamni Loop,Porcupine,ND,58568,"Absentee Voting Day- October 28th, 2026 5pm-7pm",(701) 854-3481 Ext.
 Sioux,85,Selfridge Senior Center,43 Main St.,Selfridge,ND,58568,"Absentee Voting Day - October 26th, 2026 5pm-7pm",(701) 854-3481 Ext.
@@ -60,4 +63,3 @@ Williams,105,Ray City Hall  (Drop Box),101 Main St,Ray,ND,58849,"This secure Abs
 Williams,105,Tioga City Hall  (Drop Box),16 1st St NE,Tioga,ND,58852,"This secure Absentee Ballot Drop Box will be open 24 hours a day until 7:00 PM November 3rd, 2026",(701) 577-4500 Ext.
 Williams,105,Trenton Indian Service Area (Drop box),331 4th Ave E,Trenton,ND,58853,"This secure Absentee Ballot Drop Box will be open 24 hours a day until 7:00 PM November 3rd, 2026",(701) 577-4500 Ext.
 Williams,105,Williams Co Admin Bldg (Drop box),206 E Broadway,Williston,ND,58801,"This secure Absentee Ballot Drop Box will be open 24 hours a day until 7:00 PM November 3rd, 2026",(701) 577-4500 Ext.
-Rolette,79,Rolette County Courthouse (Drop Box),102 2nd St NE,Rolla,ND,58367,"The deadline to return absentee ballots is by 7:00pm on Tuesday, November 3rd.",(701) 477-5665 Ext. 101

@@ -8,7 +8,10 @@ worth a human look are warnings.
 
 import argparse
 import csv
+import datetime
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -28,8 +31,37 @@ EXPECTED_TYPES = [
     "float", "string", "bool", "string", "uint8",
 ]
 
+# The election this data is for. Free text mentioning a date outside the window
+# between absentee opening and election day is almost always left over from the
+# previous election -- in September 2026 a Cavalier County drop-box row still told
+# voters their ballot was due "June 9th, 2026", and shipped that way for 3 weeks.
+ELECTION_DAY = datetime.date(2026, 11, 3)
+ABSENTEE_OPENS = datetime.date(2026, 9, 24)
+
+MONTHS = {m.lower(): i for i, m in enumerate(
+    ["January","February","March","April","May","June","July","August",
+     "September","October","November","December"], start=1)}
+DATE_RE = re.compile(
+    r"\b(January|February|March|April|May|June|July|August|September|October|"
+    r"November|December)\s+(\d{1,2})(?:st|nd|rd|th)?\b(?:[,\s]+(\d{4}))?",
+    re.I)
+
 errors: list[str] = []
 warnings: list[str] = []
+
+
+def stale_dates(text: str) -> list[str]:
+    """Month-day references that fall outside the current election window."""
+    out = []
+    for month_name, day, year in DATE_RE.findall(text or ""):
+        month = MONTHS[month_name.lower()]
+        try:
+            found = datetime.date(int(year) if year else ELECTION_DAY.year, month, int(day))
+        except ValueError:
+            continue
+        if not (ABSENTEE_OPENS <= found <= ELECTION_DAY):
+            out.append(f"{month_name} {day}" + (f", {year}" if year else ""))
+    return out
 
 
 def check(condition: bool, message: str) -> None:
@@ -207,6 +239,69 @@ def main() -> int:
                 f"{json_name}: {name!r} coordinate {coordinate} is outside North Dakota "
                 f"(expected [lon, lat])",
             )
+
+    # --- an official answer must never be dropped ------------------------------
+    in_wheretovote = table.column("in_wheretovote").to_pylist()
+    polling_column = table.column("polling_places").to_pylist()
+    official_blank = sum(
+        1 for flag, value in zip(in_wheretovote, polling_column) if flag and value == ""
+    )
+    check(
+        official_blank == 0,
+        f"{official_blank} address(es) have in_wheretovote=True but no polling place. "
+        f"WhereToVote gave a definitive answer for them and the app would show nothing. "
+        f"Cause to look for: step3 filling polling_places only from the inferred "
+        f"polygons, which drops small components on purpose.",
+    )
+
+    # --- free text must not cite the previous election --------------------------
+    for filename, name_column, text_columns in (
+        ("dropboxes.csv", "polling_location", ("polling_hours",)),
+        ("early-voting.csv", "early_voting_location", ("early_voting_times", "comments")),
+        ("polling-places-nodups.csv", "polling_location", ("polling_hours",)),
+    ):
+        path = PUBLIC / filename
+        if not path.exists():
+            continue
+        for record in read_csv(path):
+            for column in text_columns:
+                for found in stale_dates(record.get(column, "")):
+                    errors.append(
+                        f"{filename}: {record.get('county','?')} / "
+                        f"{record[name_column]!r} ({column}) mentions {found!r}, which is "
+                        f"outside {ABSENTEE_OPENS}..{ELECTION_DAY}. Left over from a "
+                        f"previous election?"
+                    )
+
+    # --- a renamed address must not keep a stale coordinate ---------------------
+    # The geocoder is incremental BY NAME, so a location that moved but kept its
+    # name silently keeps its old coordinate. Compare against the committed copy.
+    for filename, name_column in (
+        ("polling-places-nodups.csv", "polling_location"),
+        ("dropboxes.csv", "polling_location"),
+        ("early-voting.csv", "early_voting_location"),
+    ):
+        try:
+            committed = subprocess.run(
+                ["git", "show", f"HEAD:public/{filename}"],
+                cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+            ).stdout
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            continue
+        before = {
+            r[name_column]: (r["address"], r["city"])
+            for r in csv.DictReader(committed.splitlines())
+        }
+        for record in read_csv(PUBLIC / filename):
+            was = before.get(record[name_column])
+            now = (record["address"], record["city"])
+            if was is not None and was != now:
+                warn(
+                    False,
+                    f"{filename}: {record[name_column]!r} kept its name but its address "
+                    f"changed {was} -> {now}. The geocoder skips names it already has, so "
+                    f"re-verify its coordinate.",
+                )
 
     print(f"911-addresses.parquet: {rows:,} rows, {meta.num_row_groups} row groups")
     print(f"polling places: {limit} rows; source-list.json: {len(source_list)} entries")

@@ -2,107 +2,23 @@
   "_comment": [
     "Counties that the ND SoS 'Statewide Polling Places' export (Precincts.aspx tab 5)",
     "omits even though vip.sos.nd.gov/WhereToVote.aspx publishes their general-election",
-    "polling places. WhereToVote is the tool voters are pointed at, and it is the source",
-    "this whole polling-place model is derived from, so its answer wins over the summary",
-    "export's silence.",
+    "polling places, and counties the SoS confirms have no polling places established.",
     "",
-    "scripts/step1-update-polling-places.py appends these rows ONLY when the export has",
-    "no rows for the county at all. When the SoS fixes the export, the supplement is",
-    "skipped automatically and can be deleted -- check for the 'SKIP supplement' warning.",
+    "BOTH LISTS ARE CURRENTLY EMPTY. As of 2026-09-23 the Secretary of State has filled",
+    "in every county: Rolette appeared in the export (and its drop box changed to",
+    "Rolette City Hall), and Ransom went from 'not established' to established.",
     "",
-    "Do NOT add a county here just because it is missing from the export. Confirm on",
-    "WhereToVoteDetail.aspx?Part=<smPrecinctPart> that the page says '2026 General",
-    "Election - Voting Information for...' and lists locations. Ransom County, for",
-    "contrast, says 'This information has not been established at this time by the",
-    "county', so it is correctly left out and voters there are shown nothing."
+    "scripts/step1-update-polling-places.py appends a `counties` entry ONLY when the",
+    "export has no rows for that county, and prints 'SKIP supplement' once the state",
+    "fixes it -- that warning is what retired Rolette. step2 drops addresses for",
+    "`counties_without_polling_places` instead of aborting.",
+    "",
+    "Before adding a county here, confirm on WhereToVoteDetail.aspx?Part=<smPrecinctPart>",
+    "which case it is: '2026 General Election - Voting Information for...' with locations",
+    "means the export is wrong (use `counties`); 'This information has not been",
+    "established at this time by the county' means the county has not decided (use",
+    "`counties_without_polling_places`, and re-check every refresh)."
   ],
-  "counties": [
-    {
-      "county": "Rolette",
-      "county_number": "40",
-      "verified": "2026-09-02",
-      "why": [
-        "Rolette County (Turtle Mountain Reservation) had 25 rows in the eid=346 export",
-        "as of 2026-04-07 and has zero in eid=348 as of 2026-09-02, but WhereToVote",
-        "serves all five vote centers for all five precincts under the '2026 General",
-        "Election' heading. 7,340 of the state's 911 addresses are in Rolette County,",
-        "so dropping it would strip Turtle Mountain voters of their polling places.",
-        "Verified via WhereToVoteDetail.aspx?Part=40090101 .. 40090501 (identical sets).",
-        "Hours read from the Date/Time(s) panel: 11/03 8:00 AM - 7:00 PM.",
-        "Dunseith City Hall's address is taken from WhereToVote (13 1st St E); the April",
-        "export said 101 Peace Garden Ave, which Google's address-verified place record",
-        "contradicts."
-      ],
-      "legislative_district": "09",
-      "precinct_numbers": [
-        "01",
-        "02",
-        "03",
-        "04",
-        "05"
-      ],
-      "polling_hours": "8:00AM-7:00PM",
-      "county_auditor_phone": "(701) 477-5665 Ext. 101",
-      "polling_locations": [
-        {
-          "polling_location": "Derrick Dixon Event Center",
-          "address": "1210 William Hardesty Street",
-          "city": "Belcourt",
-          "zip_code": "58316"
-        },
-        {
-          "polling_location": "Dunseith City Hall",
-          "address": "13 1st St E",
-          "city": "Dunseith",
-          "zip_code": "58329"
-        },
-        {
-          "polling_location": "Rolla City Hall",
-          "address": "14 1st St SE",
-          "city": "Rolla",
-          "zip_code": "58367"
-        },
-        {
-          "polling_location": "St John Senior Center",
-          "address": "200 Foussard Ave SW",
-          "city": "St John",
-          "zip_code": "58369"
-        },
-        {
-          "polling_location": "WWI Memorial Building",
-          "address": "503 2nd Ave",
-          "city": "Rolette",
-          "zip_code": "58366"
-        }
-      ],
-      "dropboxes": [
-        {
-          "polling_location": "Rolette County Courthouse (Drop Box)",
-          "address": "102 2nd St NE",
-          "city": "Rolla",
-          "zip_code": "58367",
-          "polling_hours": "The deadline to return absentee ballots is by 7:00pm on Tuesday, November 3rd.",
-          "county_auditor_phone": "(701) 477-5665 Ext. 101"
-        }
-      ]
-    }
-  ],
-  "counties_without_polling_places": [
-    {
-      "county": "Ransom",
-      "verified": "2026-09-02",
-      "evidence": "https://vip.sos.nd.gov/WhereToVoteDetail.aspx?Part=37240103",
-      "why": [
-        "WhereToVote returns 'This information has not been established at this time by",
-        "the county. It will be made available as soon as possible.' for Ransom County,",
-        "and the eid=348 export has no Ransom rows in either the polling-places or the",
-        "drop-box tab. The eid=346 export listed EXPO (Lisbon) and City Auditors Office",
-        "(Enderlin), but those were the June primary's locations.",
-        "Following the official source, the app shows Ransom voters no polling place",
-        "rather than a location the county has not confirmed for November.",
-        "RE-CHECK THIS at every refresh: as soon as WhereToVote publishes Ransom's",
-        "locations, remove this entry so the addresses get their polling places back."
-      ]
-    }
-  ]
+  "counties": [],
+  "counties_without_polling_places": []
 }

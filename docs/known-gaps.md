@@ -2,7 +2,7 @@
 
 What this app cannot tell you, and why. Read before describing its coverage to anyone.
 
-Last reviewed 2026-09-02.
+Last reviewed 2026-09-23.
 
 ## Sioux County / Standing Rock has no state 911 data at all
 
@@ -26,17 +26,21 @@ turn the fallback into a real address lookup.
 
 Re-check each of these on every refresh; they are expected to fill in before the election.
 
-| Gap | Status 2026-09-02 |
+| Gap | Status 2026-09-23 |
 |---|---|
-| **Ransom County polling places** | WhereToVote says "not established at this time by the county". ~2,591 addresses show no polling place. Declared in `scripts/precincts-supplement.json`. |
-| **Ransom County drop box** | Absent from `eid=348`. |
-| **Foster and Griggs drop boxes** | Dropped after the primary with no general-election replacement. |
-| **Ward County early voting** | Absent from `eid=348`, though its primary-era comment described general-election hours. |
-| **Rolette County** | Published in WhereToVote but missing from the Precincts export; carried by the supplement. Delete the entry once the export is fixed. |
+| **Foster County drop box** | **Still missing.** The only remaining county gap. |
+| Ransom County polling places | **Closed** — established; all 2,790 addresses now have a polling place. |
+| Ransom County drop box | **Closed** — Ransom County Courthouse. |
+| Griggs County drop box | **Closed.** |
+| Ward County early voting | **Closed** — Ward County Administration Building. |
+| Rolette County | **Closed** — now in the Precincts export; supplement retired. Its drop box changed to Rolette City Hall in the process. |
 
-## Polling places are inferred for 13.5% of addresses
+`scripts/precincts-supplement.json` is currently **empty**, which means `step2` will now abort
+loudly on any precinct it cannot match — the guard is live rather than suppressed.
 
-Only **86.5%** of addresses (376,852 of 435,480) have a polling place taken directly from
+## Polling places are inferred for 13.0% of addresses
+
+Only **87.0%** of addresses (379,761 of 436,314) have a polling place taken directly from
 WhereToVote. The rest are inferred from location and the app labels them
 **"Polling Places (inferred from location)"** rather than implying official provenance.
 
@@ -49,7 +53,9 @@ Two reasons an address is inferred:
 Inference method: within each county ∩ legislative district, Voronoi areas are built around the
 addresses that *were* found, and unfound addresses inherit the polling places of the area they
 fall in. Simply-connected areas containing fewer than 10 attested addresses are **dropped**
-rather than trusted, so some addresses get no polling place at all (3,681, most of them Ransom's).
+rather than trusted, so some addresses get no polling place at all — **395** as of 2026-09-23,
+down from 3,681, after Ransom was resolved and after a step3 bug was fixed that had been
+discarding 533 addresses' official answers along with the dropped polygons.
 
 ## Two hand-imputed precincts
 
