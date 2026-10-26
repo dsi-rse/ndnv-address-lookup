@@ -2,33 +2,50 @@
 
 What this app cannot tell you, and why. Read before describing its coverage to anyone.
 
-Last reviewed 2026-09-23.
+Last reviewed 2026-10-26.
 
-## Sioux County / Standing Rock has no state 911 data at all
+## Sioux County / Standing Rock: addresses arrived in October 2026, with gaps
 
-North Dakota's NG911 dataset contains **zero of 435,480 address points and zero of 175,283 road
-centerlines** for Sioux County. Not a processing loss on our side — the state does not have it.
-`msag` has no rows for Fort Yates, Cannon Ball, Selfridge, Porcupine or Twin Buttes.
+Until September 2026 North Dakota's NG911 dataset had **zero** Sioux County address points, so
+the app could not give a Standing Rock voter their official 911 address. The 2026-10-26 export
+has **1,725** (`SOURCE = 'SIOUX COUNTY 911'`, which uses the long-reserved `src` index 43), and
+they now get the ordinary popup. What is still imperfect:
 
-So the app **cannot give a Standing Rock voter their official 911 address**, which is the app's
-primary purpose. That has been true since the first release (it is noted in
-`uchicago-dsi/north_dakota_native_vote#35`).
-
-Mitigated as of 2026-09-02 by the Sioux County fallback: tapping the county, or searching "Sioux
-County" or "Standing Rock Reservation", opens a box with everything that *is* known — the polling
-place, all drop-box and absentee-voting-day locations, the 911 coordinator to call, and driving
-directions. It explains that the gap is in the state's data, not the voter's registration.
-
-**Worth pursuing:** an address source from the Standing Rock Sioux Tribe or the BIA. That would
-turn the fallback into a real address lookup.
+- **Completeness is unknown.** 1,725 points for a county of roughly 3,900 people is plausible
+  but unverified; a missing address gets nothing to tap, as in every other county (the
+  county-wide fallback box was removed on 2026-10-26 so that a near-miss tap cannot be mistaken
+  for an address answer). Road centerlines were not re-checked.
+- **Only 1,097 of the 1,725 are official** (from WhereToVote, scraped for the first time on
+  2026-10-26). 623 more are inferred, and all of those resolve to the county's single vote
+  center, Sioux County Courthouse, so the inference cannot point anyone to the wrong building.
+  Why 628 fall back: 467 have no answer (339 are not in WhereToVote at all, 40 make its search
+  page fail, 88 unit addresses do not match even with the unit stripped); 101 unit addresses
+  were answered for the base building but step2 rejects the answer because its prefix check
+  includes the unit; and 60 are listed twice by WhereToVote (e.g. Horseshoe Rd, Cannon Ball;
+  Red Tail Hawk Ave, Fort Yates, split across precincts 3102 and 3103), which step2 treats as
+  ambiguous. 5 addresses get no polling place.
+- **Three addresses are officially in Grant County.** 6240 and 6242 97th St SW and 8750 41st
+  Ave SW are Sioux 911 points inside the Sioux County polygon, but WhereToVote puts them in
+  Grant precinct 193101. Their popup shows Grant's polling places (official) **alongside
+  Sioux's drop box and Absentee Voting Days** (chosen by `county_fp`). Fixing that means taking
+  `county_fp` from WhereToVote for official addresses, a step3 change not made this close to
+  the election.
+- **Units appear twice.** Sioux County alone writes the unit into `ADDRESS`, so 157 addresses
+  read e.g. `212 1st Ave N Unit 1 (UNIT 1)`. Cosmetic and faithful to the state's record; left
+  for a reviewed recipe change.
+- **Absentee Voting Days are time-filtered** (Sioux only). The address popup lists them in a
+  "Vote Centers (Absentee Voting Days)" section that hides each event once it is over, judged
+  in Mountain time because the county straddles the Central/Mountain line (`siouxCounty.js`,
+  `SIOUX_EVENT_TIME_ZONE`). Text that cannot be parsed is shown rather than hidden. After
+  October 30 the section disappears, leaving the courthouse drop box.
 
 ## Counties the Secretary of State has not finished entering
 
 Re-check each of these on every refresh; they are expected to fill in before the election.
 
-| Gap | Status 2026-09-23 |
+| Gap | Status 2026-10-26 |
 |---|---|
-| **Foster County drop box** | **Still missing.** The only remaining county gap. |
+| **Foster County drop box** | **Still missing** on 2026-10-26, eight days before the election. |
 | Ransom County polling places | **Closed** — established; all 2,790 addresses now have a polling place. |
 | Ransom County drop box | **Closed** — Ransom County Courthouse. |
 | Griggs County drop box | **Closed.** |
@@ -38,24 +55,26 @@ Re-check each of these on every refresh; they are expected to fill in before the
 `scripts/precincts-supplement.json` is currently **empty**, which means `step2` will now abort
 loudly on any precinct it cannot match — the guard is live rather than suppressed.
 
-## Polling places are inferred for 13.0% of addresses
+## Polling places are inferred for 13.1% of addresses
 
-Only **87.0%** of addresses (379,761 of 436,314) have a polling place taken directly from
+Only **86.9%** of addresses (380,802 of 438,257) have a polling place taken directly from
 WhereToVote. The rest are inferred from location and the app labels them
 **"Polling Places (inferred from location)"** rather than implying official provenance.
 
 Two reasons an address is inferred:
 
 1. It was never found in WhereToVote (about 11.5% historically — usually a street-name mismatch).
-2. It is new since the scrape. 4,242 addresses were added between April 2025 and September 2026,
-   and re-keying the old scrape onto them left 6,135 without a scraped answer.
+2. It is new since the scrape. Re-keying the March 2026 scrape onto the 2026-10-26 export left
+   8,533 addresses without an answer; the 1,725 in Sioux County were then scraped directly,
+   leaving 6,808 elsewhere.
 
 Inference method: within each county ∩ legislative district, Voronoi areas are built around the
 addresses that *were* found, and unfound addresses inherit the polling places of the area they
 fall in. Simply-connected areas containing fewer than 10 attested addresses are **dropped**
-rather than trusted, so some addresses get no polling place at all — **395** as of 2026-09-23,
-down from 3,681, after Ransom was resolved and after a step3 bug was fixed that had been
-discarding 533 addresses' official answers along with the dropped polygons.
+rather than trusted, so some addresses get no polling place at all — **424** as of 2026-10-26
+(395 on 2026-09-23, 3,681 on 2026-09-02). The October increase is 22 Minot Air Force Base
+addresses, which WhereToVote does not know at all: two nearby attested addresses disappeared
+upstream, the area around them fell below the threshold and was dropped, plus 5 in Sioux County.
 
 ## Two hand-imputed precincts
 
@@ -137,18 +156,6 @@ decorative punctuation, and that is a decision for the community, not for us.
 
 `scripts/validate-data.py` now warns about any label character the shipped ranges cannot render,
 and **errors** for `text-field` literals in `map-style.json` (which are ours to control).
-
-## The Sioux County "tap here" hint only appears at zoom 12+
-
-`sioux-fallback-label` is declared with `minzoom: 7`, but `reservation-names` ("Standing Rock")
-wins the symbol-collision contest below zoom 12, so the hint does not actually draw until
-`reservation-names` stops at its `maxzoom` of 12. Measured with `queryRenderedFeatures`: 0
-rendered at z7/z9/z11, then 3/4/6 at z12/z13/z14.
-
-In practice both realistic paths still work -- searching "Sioux County" or "Standing Rock
-Reservation" opens the box directly, and a voter zooming in to look for address dots has to pass
-zoom 11 anyway -- so this was left alone rather than changing collision behaviour just before an
-election. Worth revisiting afterwards.
 
 ## Coordinates are lossily compressed
 

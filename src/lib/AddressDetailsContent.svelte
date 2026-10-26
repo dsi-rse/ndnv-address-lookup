@@ -7,6 +7,8 @@
   export let dropboxEntries = [];
   /** @type {any[]} */
   export let earlyVotingEntries = [];
+  /** @type {any[]} */
+  export let voteCenterEntries = [];
   export let copied = false;
   export let onCopy = () => {};
   export let onBallotpediaLookup = () => {};
@@ -71,6 +73,7 @@
       <details open={expandAllDetails} ontoggle={onDetailsToggle}>
         <summary><strong>{pollingPlacesSection.title}</strong></summary>
         {#each pollingPlacesSection.entries as place, i}
+          {#if i != 0}<br><br>{/if}
           {place.polling_location}<br>
           {#if place.url !== null}
             <a href={place.url} target="_blank" rel="noreferrer">{place.addressLine}</a>
@@ -79,12 +82,12 @@
           {/if}
           <br>
           ({place.polling_hours}, {place.county_auditor_phone})
-          <br><br>
         {/each}
       </details>
     {/if}
 
     {#if earlyVotingEntries.length != 0}
+      <br>
       <details open={expandAllDetails} ontoggle={onDetailsToggle}>
         <summary><strong>Early Voting</strong></summary>
         {#each earlyVotingEntries as early, i}
@@ -102,11 +105,11 @@
             <br>{early.comments}
           {/if}
         {/each}
-        <br>
       </details>
     {/if}
 
     {#if dropboxEntries.length != 0}
+      <br>
       <details open={expandAllDetails} ontoggle={onDetailsToggle}>
         <summary><strong>County Dropboxes</strong></summary>
         {#each dropboxEntries as dropbox, i}
@@ -120,6 +123,23 @@
           <br>
           {@html dropbox.polling_hours_html}<br>
           Phone: {dropbox.county_auditor_phone}
+        {/each}
+      </details>
+    {/if}
+
+    {#if voteCenterEntries.length != 0}
+      <br>
+      <details open={expandAllDetails} ontoggle={onDetailsToggle}>
+        <summary><strong>Vote Centers (Absentee Voting Days)</strong></summary>
+        {#each voteCenterEntries as center, i}
+          {#if i != 0}<br><br>{/if}
+          {center.name}<br>
+          {#if center.url !== null}
+            <a href={center.url} target="_blank" rel="noreferrer">{center.addressLine}</a>
+          {:else}
+            {center.addressLine}
+          {/if}
+          <br>{center.hours}
         {/each}
       </details>
     {/if}
