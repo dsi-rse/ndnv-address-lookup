@@ -25,12 +25,13 @@
 
   <div class="siouxBody">
     <p class="siouxLead">
-      As of September 2026, Sioux County addresses are not available in North Dakota's 911 address dataset.
+      Sioux County addresses were added to North Dakota's 911 address dataset in October 2026.
+      Zoom in and tap an address to see its details. This box lists voting information for the whole county.
     </p>
 
     {#if data?.coordinator !== null && data?.coordinator !== undefined}
       <details>
-        <summary><strong>Who to contact to get your address</strong></summary>
+        <summary><strong>Who to contact if your address is missing or wrong</strong></summary>
         <strong>{data.coordinator.title}</strong><br>
         <strong>Name:</strong> {data.coordinator.name}<br>
         {#if data.coordinator.phone}

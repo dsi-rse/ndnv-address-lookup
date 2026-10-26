@@ -12,7 +12,7 @@ import pandas as pd
 
 
 PARQUET_PATH = Path("public/911-addresses.parquet")
-FETCH_SCRIPT = Path("scripts/fetch-WhereToVote-districts.py")
+FETCH_SCRIPT = Path("scripts/step0-fetch-WhereToVote-districts.py")
 
 
 def parse_args() -> argparse.Namespace:

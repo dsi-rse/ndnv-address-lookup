@@ -15,7 +15,7 @@ Checkpoints for the 2026 general election:
 
 - [x] **2026-09-02** — first pass (PR #35). See `2026-09-02-data-recheck.md`.
 - [x] **2026-09-23** — before absentee voting opened. See `2026-09-23-data-recheck.md`.
-- [ ] **Late October 2026** — final check.
+- [x] **2026-10-26** — final check. See `2026-10-26-data-recheck.md`.
 
 Each pass so far has found something the previous one missed, so run every step even when the
 cheap probes look quiet.
@@ -51,7 +51,7 @@ curl -s 'https://services1.arcgis.com/GOcSXpzwBHyk2nog/arcgis/rest/services/NDGI
 curl -s 'https://services1.arcgis.com/GOcSXpzwBHyk2nog/arcgis/rest/services/NDGISHUBSiteStructureAddressPoints/FeatureServer/0/query?where=1%3D1&returnCountOnly=true&f=json'
 # 2026-09-02 baseline: 435,480 features, dataLastEditDate 2026-08-31
 
-# Has Sioux County finally appeared? (0 means the gap is still there)
+# Sioux County: 0 until September 2026, 1,725 on 2026-10-26. A change means re-scraping it (step 5g).
 curl -s "https://services1.arcgis.com/GOcSXpzwBHyk2nog/arcgis/rest/services/NDGISHUBSiteStructureAddressPoints/FeatureServer/0/query?where=County%3D%27SIOUX+COUNTY%27&returnCountOnly=true&f=json"
 ```
 
@@ -85,7 +85,11 @@ replaying the Telerik tab client-state in the "Export to Excel" postback:
 
 `WhereToVote.aspx` is the tool voters are actually pointed at. Search by house number + ZIP, then
 the results grid's hidden first column is `smPrecinctPart`, which you can feed directly to
-`https://vip.sos.nd.gov/WhereToVoteDetail.aspx?Part=<smPrecinctPart>`. Its heading says
+`https://vip.sos.nd.gov/WhereToVoteDetail.aspx?Part=<smPrecinctPart>&tab=&ptlPKID=&ptlhPKID=`.
+**As of 2026-10-26 that only works after one search in the same browser session**; a cold
+request redirects to a "This site is no longer active" page. Do one search through the form
+first, then `fetch()` detail pages from that tab (the address header shows the session's
+address, but the locations follow `Part`). Its heading says
 `2026 General Election - Voting Information for...` when the county has reported, and
 `This information has not been established at this time by the county` when it has not. **That
 distinction is the whole basis for how gaps are handled.**
@@ -96,7 +100,8 @@ See `known-gaps.md`. As of 2026-09-23 the Secretary of State has closed all of t
 Foster, and `scripts/precincts-supplement.json` is **empty**.
 
 - [ ] **Foster County drop box** — still absent. The only remaining county gap.
-- [ ] **Sioux County** — still zero address points statewide; the fallback box is still needed.
+- [x] **Sioux County** — 1,725 address points appeared in October 2026 and now ship. See
+      `known-gaps.md` for what is still imperfect.
 - [ ] **Porcupine Local District Buidling** — street-level coordinate only. Do **not** "fix" it
       from a name search or MapQuest (South Dakota / Selfridge respectively); see
       `known-gaps.md`.
@@ -153,6 +158,9 @@ curl -s 'https://hub.arcgis.com/api/download/v1/items/7c825491a88b4c03b22fde12ee
 #     -> {"status":"Completed","resultUrl":"...gpkg"}; poll until Completed, then download the
 #        resultUrl into Box. CHECK it is current: compare its gpkg_contents.last_change and
 #        feature count against the service, because the Hub serves a cached replica.
+#        resultUrl redirects to blob storage: use `curl -L`.
+#     The build also needs TIGER 2024 tracts (default ~/Downloads/tl_2024_38_tract.zip):
+#        https://www2.census.gov/geo/tiger/TIGER2024/TRACT/tl_2024_38_tract.zip  (pass --tracts)
 
 # 5b. BLOCKING regression test: reproduce the shipped file from the April-2025 snapshot first
 python3 scripts/build-911-addresses.py \
@@ -160,6 +168,8 @@ python3 scripts/build-911-addresses.py \
   --layer Structures_NG911 \
   --verify-against <(git show 3914a49:public/911-addresses.parquet)   # use a real temp file
 # All nine base columns must be "identical in order". Do not continue until they are.
+# It needs THIS snapshot (431,238 features). A different April-2025 export of 431,212 features
+# also exists on the storage drive and fails every column -- that is the wrong input, not a bug.
 
 # 5c. build from the new download (note the layer was renamed in the 2026 export)
 python3 scripts/build-911-addresses.py <new>.gpkg --layer DBO_SiteStructureAddressPoints
@@ -175,6 +185,13 @@ python3 scripts/rekey-wheretovote-scrape.py \
 # 5f. rebuild the joins and the derived columns
 python3 scripts/step2-analyze-wheretovote.py --key-value-pairs <rekeyed>.csv --min-addresses 10
 python3 scripts/step3-add-wheretovote-to-addresses.py
+```
+
+```bash
+# 5g. scrape addresses that were never scraped, if a whole area is new (Sioux County, 2026-10-26).
+#     Write a subset Parquet with pandas so its index keeps the full file's row positions, run
+#     step0-batch on it, retry network errors, then append its rows to the re-keyed CSV.
+python3 scripts/step0-batch-fetch-WhereToVote-districts.py --parquet <subset>.parquet --parallel 4 > new.csv
 ```
 
 **Why 5e exists.** `key-value-pairs.csv`, `wheretovote-points.gpkg`, step 2 and step 3 all
@@ -217,8 +234,8 @@ a blank on the page itself rather than assuming a parsing error.
 python3 scripts/validate-data.py
 ```
 
-Errors must be zero. The four expected warnings as of 2026-09-02 are the Sioux `county_fp 85`
-pair and the Porcupine coordinate.
+Errors must be zero. As of 2026-10-26 the only expected warnings are the two Twin Buttes glyph
+warnings; the Sioux `county_fp 85` pair went away when Sioux addresses arrived.
 
 ## Step 7 — Test the running app. This is the real acceptance gate.
 
@@ -282,10 +299,12 @@ it still serves the old data, as a sanity check on the rendering path.
 
 - Several of the newly-added addresses render, and say "inferred from location" rather than
   claiming to come from WhereToVote.
-- **Sioux County**: tap inside the county → the fallback box opens with the polling place, all
-  absentee/drop-box locations, the 911 coordinator and working directions links. Searching
-  "Sioux County" or "Standing Rock Reservation" opens it too. Tap an address dot in a
-  neighbouring county → the normal popup, with no state left over from the Sioux box.
+- **Sioux County**: tap an address dot → the normal popup, with the courthouse drop box and a
+  "Vote Centers (Absentee Voting Days)" section listing only events not yet over. Test the
+  filter by faking the clock with `navigate_page`'s `initScript` (replace `Date`; use a URL
+  with a new query string, since a hash-only change does not load a new document). Tap
+  between dots, or search "Sioux County" / "Standing Rock Reservation" → the county-wide box.
+  Tap a dot in a neighbouring county → the normal popup, with no state left over.
 - Both display paths: the desktop popup and the mobile `<dialog>` (emulate 360×640 and 320×480).
   Adding sections makes the app promote to the dialog more often; that is intended.
 - Console has no new errors. `Unimplemented type: 4` is pre-existing and benign (PR #3).

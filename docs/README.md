@@ -9,6 +9,7 @@ data is held to one rule: **every claim the app makes must be traceable to an of
 | [`recheck-runbook.md`](recheck-runbook.md) | **Start here when refreshing the data.** Step-by-step procedure, written for someone with no prior context. |
 | [`data-sources.md`](data-sources.md) | Where every shipped dataset comes from, and how it is processed. |
 | [`known-gaps.md`](known-gaps.md) | What the app cannot tell you, and why. Read before promising anyone completeness. |
+| [`2026-10-26-data-recheck.md`](2026-10-26-data-recheck.md) | Audit record of the final pre-election refresh: Sioux County's first 911 addresses, and the time-filtered Absentee Voting Days. |
 | [`2026-09-23-data-recheck.md`](2026-09-23-data-recheck.md) | Audit record of the second refresh, the day before absentee voting opened. Includes three process fixes. |
 | [`2026-09-02-data-recheck.md`](2026-09-02-data-recheck.md) | Audit record of the first refresh: every discrepancy found and every decision taken. |
 
@@ -41,8 +42,8 @@ every address at a different polling place, with no error. `validate-data.py` ra
 
 **2. `src` holds a row *position* too.** The `src` column indexes
 `src/data/source-list.json` by array position. **Never reorder or sort that file** — index 43
-(`SIOUX COUNTY 911`) is deliberately unused, and index 54 is deliberately out of alphabetical
-order. Editing contact details in place is safe; re-sorting would make every popup cite the
+(`SIOUX COUNTY 911`) sat unused until Sioux addresses appeared in October 2026, and index 54 is
+deliberately out of alphabetical order. Editing contact details in place is safe; re-sorting would make every popup cite the
 wrong 911 coordinator.
 
 ## Parquet internals are load-bearing
@@ -78,4 +79,4 @@ From issues #8, #20 and PR #7, in the project's stated priority order:
 |---|---|---|
 | Peak RAM on a phone | < 150 MB ceiling, ~70 MB observed | 39–41 MB steady state after GC; ~140 MB transient before collection |
 | Total site (`dist`) | ~10 MB target | 18 MB (3.8 MB of it build-only GeoPackages that should move out of `public/`) |
-| `911-addresses.parquet` | — | 2.32 MB for 435,480 addresses |
+| `911-addresses.parquet` | — | 2.34 MB for 438,257 addresses (2026-10-26) |

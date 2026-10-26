@@ -51,8 +51,8 @@ used for directions so the links do not change meaning when Google's name databa
 
 ## 911 addresses — ND GIS Hub
 
-`public/911-addresses.parquet`, 435,480 addresses, fetched **2026-09-02** (layer last edited
-2026-08-31).
+`public/911-addresses.parquet`, 438,257 addresses, fetched **2026-10-26** (layer last edited
+2026-10-26). This is the first export with any Sioux County addresses (1,725).
 
 - Portal: <https://gishubdata-ndgov.hub.arcgis.com/datasets/NDGOV::ndgishub-site-structure-address-points>
 - Service: `services1.arcgis.com/GOcSXpzwBHyk2nog/…/NDGISHUBSiteStructureAddressPoints/FeatureServer/0`
@@ -88,7 +88,8 @@ Caveat for future re-checks: NDACo is an aggregator, not each county's own recor
 The two city entries have to be checked separately because NDACo lists only county officials.
 
 **Array position is an interface.** The Parquet's `src` column indexes this file positionally.
-Index 43 (`SIOUX COUNTY 911`) is intentionally unused, and index 54 is intentionally out of
+Index 43 (`SIOUX COUNTY 911`) was reserved, unused, until Sioux County addresses appeared in
+October 2026; it is now used by those 1,725 rows. Index 54 is intentionally out of
 alphabetical order. Edit in place; never sort.
 
 ## Legislative districts — ND Legislative Council

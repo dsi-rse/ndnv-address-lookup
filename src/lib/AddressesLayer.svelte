@@ -5,7 +5,14 @@
   import AddressDetailsContent from './AddressDetailsContent.svelte';
   import SiouxCountyDetailsContent from './SiouxCountyDetailsContent.svelte';
   import { getDirectionsUrl } from './directions.js';
-  import { buildSiouxCountyData } from './siouxCounty.js';
+  import {
+    SIOUX_COUNTY_FP,
+    absenteeVotingDayEnd,
+    absenteeVotingDayHasEnded,
+    buildSiouxCountyData,
+    dedupeLocations,
+    isAbsenteeVotingDay,
+  } from './siouxCounty.js';
   import sourceList from "../data/source-list.json";
   import { parquetMetadata, parquetRead } from "hyparquet";
   import { compressors } from "hyparquet-compressors";
@@ -24,6 +31,7 @@
   const earlyVotingUrl = new URL("/early-voting.csv", import.meta.url).href;
   const earlyVotingLocationsUrl = new URL("/early-voting-locations.json", import.meta.url).href;
   let pollingPlaces = [];
+  /** @type {any[]} */
   let dropboxes = [];
   /** @type {any[]} */
   let earlyVoting = [];
@@ -467,8 +475,21 @@
     }
 
     const origin = `${popupData?.lat},${popupData?.lon}`;
-    return dropboxes
-      .filter(dropbox => Number(dropbox.county_fp) == countyFp)
+    let rows = dropboxes.filter(dropbox => Number(dropbox.county_fp) == countyFp);
+    if (countyFp == SIOUX_COUNTY_FP) {
+      // Sioux lists its dated Absentee Voting Days on the drop-box tab too; those
+      // go in their own time-filtered section (getSiouxVoteCenterEntries). Also
+      // drop the bare courthouse row: it has no hours and duplicates the
+      // "(Drop Box)" row at the same address.
+      rows = rows.filter(dropbox => !isAbsenteeVotingDay(dropbox.polling_hours));
+      const addressesWithHours = new Set(
+        rows.filter(dropbox => dropbox.polling_hours != "").map(dropbox => dropbox.address)
+      );
+      rows = rows.filter(
+        dropbox => dropbox.polling_hours != "" || !addressesWithHours.has(dropbox.address)
+      );
+    }
+    return rows
       .map(dropbox => {
         const coordinates = dropboxLocations[dropbox.polling_location];
         return {
@@ -499,6 +520,9 @@
     const origin = `${popupData?.lat},${popupData?.lon}`;
     return earlyVoting
       .filter(entry => Number(entry.county_fp) == countyFp)
+      // Sioux's Absentee Voting Days are shown by getSiouxVoteCenterEntries instead.
+      .filter(entry => countyFp != SIOUX_COUNTY_FP
+        || !isAbsenteeVotingDay(`${entry.early_voting_times} ${entry.comments}`))
       .map(entry => {
         const coordinates = earlyVotingLocations[entry.early_voting_location];
         return {
@@ -511,6 +535,47 @@
       });
   }
 
+  // Sioux County's one-evening "Absentee Voting Day" events, which the state lists
+  // on both the drop-box and early-voting tabs. Unlike every other section, this
+  // one hides entries that are already over (judged in Sioux County's local time;
+  // see SIOUX_EVENT_TIME_ZONE), because a past date read as an upcoming one would
+  // send someone to an empty building. The state's wording is still shown verbatim.
+  /** @param {any} popupData */
+  function getSiouxVoteCenterEntries(popupData) {
+    if (Number(popupData?.county_fp) != SIOUX_COUNTY_FP) {
+      return [];
+    }
+
+    const origin = `${popupData?.lat},${popupData?.lon}`;
+    /**
+     * @param {string} name
+     * @param {any} row
+     * @param {string} hours
+     * @param {any} locations
+     */
+    const toEntry = (name, row, hours, locations) => ({
+      name,
+      addressLine: `${row.address}, ${row.city} ${row.zip_code}`,
+      hours,
+      url: getDirectionsUrl(origin, locations[name]),
+    });
+    const fromDropboxes = dropboxes
+      .filter(row => Number(row.county_fp) == SIOUX_COUNTY_FP)
+      .filter(row => isAbsenteeVotingDay(row.polling_hours))
+      .map(row => toEntry(row.polling_location, row, row.polling_hours, dropboxLocations));
+    const fromEarlyVoting = earlyVoting
+      .filter(row => Number(row.county_fp) == SIOUX_COUNTY_FP)
+      .map(row => ({ row, hours: [row.early_voting_times, row.comments].filter(Boolean).join(" ") }))
+      .filter(({ hours }) => isAbsenteeVotingDay(hours))
+      .map(({ row, hours }) => toEntry(row.early_voting_location, row, hours, earlyVotingLocations));
+
+    // Soonest first; anything whose date cannot be parsed goes last.
+    const end = (/** @type {any} */ entry) => absenteeVotingDayEnd(entry.hours) ?? Infinity;
+    return dedupeLocations([...fromDropboxes, ...fromEarlyVoting])
+      .filter(entry => !absenteeVotingDayHasEnded(entry.hours))
+      .sort((a, b) => end(a) - end(b));
+  }
+
   $effect(() => {
     if (!popupOpen  &&  !dialogOpen  &&  !openingAddressDetails  &&  popupData !== null) {
       popupData = null;
@@ -520,9 +585,9 @@
   });
 
   // ---- Sioux County fallback -------------------------------------------------
-  // Sioux County has no 911 address points at all, so there is no dot to click.
-  // A transparent fill layer over the county (see src/data/map-style.json) makes
-  // the whole county tappable instead.
+  // Sioux County had no 911 address points until October 2026. A transparent fill
+  // layer over the county (see src/data/map-style.json) still makes the space
+  // between its address dots tappable, opening a county-wide summary.
   const SIOUX_FILL_LAYER = "sioux-fallback-fill";
   // A modal opened on tap 1 would be dismissed by tap 2 of a double-tap-to-zoom,
   // which looks like nothing happening at all.
@@ -544,9 +609,9 @@
 
   /** @param {any} event */
   function handleSiouxClick(event) {
-    // Never steal a click meant for an address dot. Sioux has none today, but
-    // maplibre fires every matching layer listener with no top-most-wins rule,
-    // and this keeps the two features compatible if Sioux addresses ever appear.
+    // Never steal a click meant for an address dot. Sioux has had address dots
+    // since October 2026, and maplibre fires every matching layer listener with
+    // no top-most-wins rule, so a dot tap must open the ordinary popup only.
     if (map.getLayer("address-circles")) {
       const hits = map.queryRenderedFeatures(event.point, { layers: ["address-circles"] });
       if (hits.length != 0) {
@@ -702,6 +767,7 @@
         pollingPlacesSection={getPollingPlacesSection(popupData)}
         dropboxEntries={getDropboxEntries(popupData)}
         earlyVotingEntries={getEarlyVotingEntries(popupData)}
+        voteCenterEntries={getSiouxVoteCenterEntries(popupData)}
         {copied}
         onCopy={handleCopy}
         onBallotpediaLookup={handleBallotpediaLookup}
@@ -729,6 +795,7 @@
         pollingPlacesSection={getPollingPlacesSection(popupData)}
         dropboxEntries={getDropboxEntries(popupData)}
         earlyVotingEntries={getEarlyVotingEntries(popupData)}
+        voteCenterEntries={getSiouxVoteCenterEntries(popupData)}
         {copied}
         onCopy={handleCopy}
         onBallotpediaLookup={handleBallotpediaLookup}
@@ -770,6 +837,7 @@
         pollingPlacesSection={getPollingPlacesSection(popupData)}
         dropboxEntries={getDropboxEntries(popupData)}
         earlyVotingEntries={getEarlyVotingEntries(popupData)}
+        voteCenterEntries={getSiouxVoteCenterEntries(popupData)}
         {copied}
         onCopy={handleCopy}
         onBallotpediaLookup={handleBallotpediaLookup}
