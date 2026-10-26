@@ -73,6 +73,7 @@
       <details open={expandAllDetails} ontoggle={onDetailsToggle}>
         <summary><strong>{pollingPlacesSection.title}</strong></summary>
         {#each pollingPlacesSection.entries as place, i}
+          {#if i != 0}<br><br>{/if}
           {place.polling_location}<br>
           {#if place.url !== null}
             <a href={place.url} target="_blank" rel="noreferrer">{place.addressLine}</a>
@@ -81,12 +82,12 @@
           {/if}
           <br>
           ({place.polling_hours}, {place.county_auditor_phone})
-          <br><br>
         {/each}
       </details>
     {/if}
 
     {#if earlyVotingEntries.length != 0}
+      <br>
       <details open={expandAllDetails} ontoggle={onDetailsToggle}>
         <summary><strong>Early Voting</strong></summary>
         {#each earlyVotingEntries as early, i}
@@ -104,11 +105,11 @@
             <br>{early.comments}
           {/if}
         {/each}
-        <br>
       </details>
     {/if}
 
     {#if dropboxEntries.length != 0}
+      <br>
       <details open={expandAllDetails} ontoggle={onDetailsToggle}>
         <summary><strong>County Dropboxes</strong></summary>
         {#each dropboxEntries as dropbox, i}

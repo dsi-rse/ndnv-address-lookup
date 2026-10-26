@@ -3,13 +3,11 @@
   import { getMapContext, GeoJSON, CircleLayer, Popup } from 'svelte-maplibre';
 
   import AddressDetailsContent from './AddressDetailsContent.svelte';
-  import SiouxCountyDetailsContent from './SiouxCountyDetailsContent.svelte';
   import { getDirectionsUrl } from './directions.js';
   import {
     SIOUX_COUNTY_FP,
     absenteeVotingDayEnd,
     absenteeVotingDayHasEnded,
-    buildSiouxCountyData,
     dedupeLocations,
     isAbsenteeVotingDay,
   } from './siouxCounty.js';
@@ -584,121 +582,6 @@
     }
   });
 
-  // ---- Sioux County fallback -------------------------------------------------
-  // Sioux County had no 911 address points until October 2026. A transparent fill
-  // layer over the county (see src/data/map-style.json) still makes the space
-  // between its address dots tappable, opening a county-wide summary.
-  const SIOUX_FILL_LAYER = "sioux-fallback-fill";
-  // A modal opened on tap 1 would be dismissed by tap 2 of a double-tap-to-zoom,
-  // which looks like nothing happening at all.
-  const SIOUX_REOPEN_GUARD_MS = 400;
-
-  /** @type {any} */
-  let siouxData = $state(null);
-  let siouxDialogOpen = $state(false);
-  /** @type {any} */
-  let siouxDialogElement = $state(null);
-  /** @type {any} */
-  let siouxSurfaceElement = $state(null);
-  let siouxOpenedAt = 0;
-
-  function closeSiouxDetails() {
-    siouxDialogOpen = false;
-    siouxData = null;
-  }
-
-  /** @param {any} event */
-  function handleSiouxClick(event) {
-    // Never steal a click meant for an address dot. Sioux has had address dots
-    // since October 2026, and maplibre fires every matching layer listener with
-    // no top-most-wins rule, so a dot tap must open the ordinary popup only.
-    if (map.getLayer("address-circles")) {
-      const hits = map.queryRenderedFeatures(event.point, { layers: ["address-circles"] });
-      if (hits.length != 0) {
-        return;
-      }
-    }
-    if (siouxDialogOpen  &&  Date.now() - siouxOpenedAt < SIOUX_REOPEN_GUARD_MS) {
-      return;
-    }
-
-    openSiouxDetails(event.lngLat);
-  }
-
-  /** @param {{lng: number, lat: number}} lngLat */
-  function openSiouxDetails(lngLat) {
-    closeAddressDetails();
-    siouxData = buildSiouxCountyData(lngLat, {
-      pollingPlaces,
-      pollingPlaceLocations,
-      dropboxes,
-      dropboxLocations,
-      earlyVoting,
-      earlyVotingLocations,
-      sourceList,
-    });
-    siouxOpenedAt = Date.now();
-    siouxDialogOpen = true;
-  }
-
-  function siouxCursorOn() {
-    map.getCanvas().style.cursor = "pointer";
-  }
-
-  function siouxCursorOff() {
-    map.getCanvas().style.cursor = "";
-  }
-
-  $effect(() => {
-    // Only `loaded` is reactive. Do NOT also gate on map.getLayer(): if this effect
-    // happens to run before the style's counties layers exist, the guard would bail
-    // and never retry, silently leaving the county untappable. maplibre resolves the
-    // layer at dispatch time, so registering early is fine.
-    if (!loaded) {
-      return;
-    }
-    // Not the shared mouseEnter/mouseLeave: those read event.map, which only
-    // exists on svelte-maplibre's synthetic layer events, not raw maplibre ones.
-    map.on("click", SIOUX_FILL_LAYER, handleSiouxClick);
-    map.on("mouseenter", SIOUX_FILL_LAYER, siouxCursorOn);
-    map.on("mouseleave", SIOUX_FILL_LAYER, siouxCursorOff);
-    return () => {
-      map.off("click", SIOUX_FILL_LAYER, handleSiouxClick);
-      map.off("mouseenter", SIOUX_FILL_LAYER, siouxCursorOn);
-      map.off("mouseleave", SIOUX_FILL_LAYER, siouxCursorOff);
-    };
-  });
-
-  $effect(() => {
-    /** @param {any} event */
-    const onSearch = (event) => {
-      const coords = event?.detail?.coords;
-      if (!Array.isArray(coords)  ||  coords.length != 2) {
-        return;
-      }
-      openSiouxDetails({ lng: coords[0], lat: coords[1] });
-    };
-    window.addEventListener("open-sioux-box", onSearch);
-    return () => window.removeEventListener("open-sioux-box", onSearch);
-  });
-
-  $effect(() => {
-    if (siouxDialogElement === null) {
-      return;
-    }
-    if (siouxDialogOpen) {
-      if (!siouxDialogElement.open) {
-        siouxDialogElement.showModal();
-        requestAnimationFrame(() => {
-          siouxSurfaceElement?.focus();
-        });
-      }
-    }
-    else if (siouxDialogElement.open) {
-      siouxDialogElement.close();
-    }
-  });
-
   $effect(() => {
     if (dialogElement === null) {
       return;
@@ -808,27 +691,6 @@
   {/if}
 </dialog>
 
-<dialog
-  bind:this={siouxDialogElement}
-  class="siouxDialog"
-  oncancel={(event) => { event.preventDefault(); closeSiouxDetails(); }}
-  onclick={(event) => {
-    if (event.target !== siouxDialogElement) {
-      return;
-    }
-    if (Date.now() - siouxOpenedAt < SIOUX_REOPEN_GUARD_MS) {
-      return;
-    }
-    closeSiouxDetails();
-  }}
->
-  {#if siouxDialogOpen && siouxData !== null}
-    <div class="siouxDialogSurface" bind:this={siouxSurfaceElement} tabindex="-1">
-      <SiouxCountyDetailsContent data={siouxData} onClose={closeSiouxDetails} />
-    </div>
-  {/if}
-</dialog>
-
 {#if popupData !== null}
   <div class="popupMeasurementShell">
     <div class="popupMeasurementContent" bind:this={popupMeasurementElement}>
@@ -888,26 +750,4 @@
     background: rgba(0, 0, 0, 0.25);
   }
 
-  .siouxDialog {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    max-width: none;
-    max-height: none;
-  }
-  .siouxDialogSurface {
-    max-width: min(560px, calc(100vw - 24px));
-    /* 100vh is the LARGE viewport on Android Chrome, which hides the bottom of a
-       tall box behind the URL bar. This box is tall by nature. */
-    max-height: min(calc(100vh - 24px), calc(100dvh - 24px));
-    overflow-y: auto;
-    padding: 12px 14px;
-    border: 1px solid #808080;
-    border-radius: 12px;
-    background: white;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-  }
-  .siouxDialog::backdrop {
-    background: rgba(0, 0, 0, 0.25);
-  }
 </style>

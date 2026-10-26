@@ -12,9 +12,9 @@ has **1,725** (`SOURCE = 'SIOUX COUNTY 911'`, which uses the long-reserved `src`
 they now get the ordinary popup. What is still imperfect:
 
 - **Completeness is unknown.** 1,725 points for a county of roughly 3,900 people is plausible
-  but unverified; a missing address still gets nothing to tap. The county-wide box (tap
-  between dots, or search "Sioux County" / "Standing Rock Reservation") remains for that case.
-  Road centerlines were not re-checked.
+  but unverified; a missing address gets nothing to tap, as in every other county (the
+  county-wide fallback box was removed on 2026-10-26 so that a near-miss tap cannot be mistaken
+  for an address answer). Road centerlines were not re-checked.
 - **Only 1,097 of the 1,725 are official** (from WhereToVote, scraped for the first time on
   2026-10-26). 623 more are inferred, and all of those resolve to the county's single vote
   center, Sioux County Courthouse, so the inference cannot point anyone to the wrong building.
@@ -36,9 +36,8 @@ they now get the ordinary popup. What is still imperfect:
 - **Absentee Voting Days are time-filtered** (Sioux only). The address popup lists them in a
   "Vote Centers (Absentee Voting Days)" section that hides each event once it is over, judged
   in Mountain time because the county straddles the Central/Mountain line (`siouxCounty.js`,
-  `SIOUX_EVENT_TIME_ZONE`). Text that cannot be parsed is shown rather than hidden. The
-  county-wide box applies the same filter. After October 30 the section disappears, leaving
-  the courthouse drop box.
+  `SIOUX_EVENT_TIME_ZONE`). Text that cannot be parsed is shown rather than hidden. After
+  October 30 the section disappears, leaving the courthouse drop box.
 
 ## Counties the Secretary of State has not finished entering
 
@@ -157,18 +156,6 @@ decorative punctuation, and that is a decision for the community, not for us.
 
 `scripts/validate-data.py` now warns about any label character the shipped ranges cannot render,
 and **errors** for `text-field` literals in `map-style.json` (which are ours to control).
-
-## The Sioux County "tap here" hint only appears at zoom 12+
-
-`sioux-fallback-label` is declared with `minzoom: 7`, but `reservation-names` ("Standing Rock")
-wins the symbol-collision contest below zoom 12, so the hint does not actually draw until
-`reservation-names` stops at its `maxzoom` of 12. Measured with `queryRenderedFeatures`: 0
-rendered at z7/z9/z11, then 3/4/6 at z12/z13/z14.
-
-In practice both realistic paths still work -- searching "Sioux County" or "Standing Rock
-Reservation" opens the box directly, and a voter zooming in to look for address dots has to pass
-zoom 11 anyway -- so this was left alone rather than changing collision behaviour just before an
-election. Worth revisiting afterwards.
 
 ## Coordinates are lossily compressed
 

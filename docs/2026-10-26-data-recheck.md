@@ -117,8 +117,8 @@ Grand Forks Fire (701-746-2566, fire_admin@grandforksgov.com) unchanged.
 
 ## App changes
 
-All in `src/lib/` plus one map label; `svelte-check` went from 195 to **192** errors (annotating
-`dropboxes` removed three).
+In `src/lib/`, `src/App.svelte` and `src/data/map-style.json`. `svelte-check` went from 195 to
+**191** errors (annotating `dropboxes` removed three; deleting the Sioux box component one).
 
 - **Sioux addresses get the normal popup.** For `county_fp` 85 only:
   - *County Dropboxes* shows the real drop box — Absentee Voting Day rows are moved out, and the
@@ -131,18 +131,19 @@ All in `src/lib/` plus one map label; `svelte-check` went from 195 to **192** er
   counts as over once the wall clock in **America/Denver** passes its end time. Sioux County
   straddles the Central/Mountain line (Fort Yates is Central; west of ND 31 is Mountain), so
   Mountain time is the later of the two possible closings — an event can linger an hour, never
-  vanish early. Unparseable text is always shown. Same filter in the county-wide box.
-- **County-wide box and label reworded**: no longer claims there are no addresses
-  ("Tap for Sioux County voting information"; lead says addresses arrived in October 2026).
-  It stays reachable by tapping between dots and by searching "Sioux County" / "Standing Rock
-  Reservation".
+  vanish early. Unparseable text is always shown.
+- **The Sioux County fallback box was removed** (fill layer, "Tap for Sioux County voting
+  information" label, `SiouxCountyDetailsContent.svelte`, the search hook). Decision by the
+  project lead: with real address dots, a second, county-wide popup that opens when a tap
+  misses a dot by a few pixels would look like an address answer while being less precise.
+  Sioux County now behaves like every other county.
+- **Uniform section spacing in the address popup.** Each section previously handled its own
+  spacing (Polling Places only when expanded, Early Voting a trailing break, County Dropboxes
+  none), so headings sat at different distances. Now every section is preceded by one blank
+  line, open or closed: measured 20 px between every pair of headings in all states, in Sioux
+  and Burleigh popups.
 - `step0-batch-fetch-WhereToVote-districts.py` pointed at the pre-rename
   `scripts/fetch-WhereToVote-districts.py`; fixed.
-
-**Terminology caveat:** the county-wide box still says Sioux "uses vote centers … and has only
-one" (the courthouse, election day), while the new popup section calls the Absentee Voting Day
-sites "Vote Centers". Both follow instructions given; worth reconciling if anyone finds it
-confusing.
 
 ## Verification performed
 
@@ -151,14 +152,14 @@ On the production build (`vite build && vite preview`) with the Chrome DevTools 
 - 10 Agency Ave, Fort Yates: Sioux coordinator, Sioux County Courthouse (from WhereToVote),
   courthouse drop box only, all five Absentee Voting Days with working directions links.
 - Clock faked via `initScript`: at 2026-10-28 18:30 MDT, Porcupine (ends 19:00) still shown,
-  Oct 26/27 hidden; at 19:00 MDT Porcupine hidden; on Nov 1 the section is gone from the popup
-  and from the county-wide box, leaving the drop box.
+  Oct 26/27 hidden; at 19:00 MDT Porcupine hidden; on Nov 1 the section is gone, leaving the
+  drop box.
 - Sioux inferred address labelled "inferred from location"; unit address shows the duplicated
   unit; the Grant-precinct address shows Grant polling places as described above.
 - McClusky shows Ambulance Bay; Williams 14111 Willow Dr (district 23) includes Ernie French
   Center; 2801 Broadway N, Fargo still shows all 16 official locations; Foster has no drop box.
-- Search "Sioux County" opens the box (12 links); tapping between dots after closing a popup
-  opens it with no state left over.
+- After removing the box: tapping empty map inside Sioux County opens nothing; searching
+  "Standing Rock Reservation" just flies there; no console messages, no failed requests.
 - Mobile `<dialog>` at 360×640 and 320×480: no horizontal overflow.
 - No console errors or warnings; no failed requests; only the `0-255` glyph ranges requested.
 - Memory: after cycling 12 popups across four regions and forcing GC, 26 MB on a fresh page vs

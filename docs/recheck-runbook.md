@@ -247,8 +247,8 @@ pnpm install
 ```
 
 Test against the **production build**, not the dev server: Vite's dev server intermittently drops
-the `counties`/`places` GeoJSON sources after a deep zoom, which makes the Sioux County fallback
-look broken when it is not.
+the `counties`/`places` GeoJSON sources after a deep zoom, which makes county and place labels
+look broken when they are not.
 
 In dev mode only, `window.__map` is the maplibre instance — use it to `jumpTo` a coordinate and
 `queryRenderedFeatures`. To click an address dot, dispatch `mousedown`/`mouseup`/`click`
@@ -302,9 +302,8 @@ it still serves the old data, as a sanity check on the rendering path.
 - **Sioux County**: tap an address dot → the normal popup, with the courthouse drop box and a
   "Vote Centers (Absentee Voting Days)" section listing only events not yet over. Test the
   filter by faking the clock with `navigate_page`'s `initScript` (replace `Date`; use a URL
-  with a new query string, since a hash-only change does not load a new document). Tap
-  between dots, or search "Sioux County" / "Standing Rock Reservation" → the county-wide box.
-  Tap a dot in a neighbouring county → the normal popup, with no state left over.
+  with a new query string, since a hash-only change does not load a new document). Tapping
+  empty map in Sioux County opens nothing (the county-wide box was removed 2026-10-26).
 - Both display paths: the desktop popup and the mobile `<dialog>` (emulate 360×640 and 320×480).
   Adding sections makes the app promote to the dialog more often; that is intended.
 - Console has no new errors. `Unimplemented type: 4` is pre-existing and benign (PR #3).
